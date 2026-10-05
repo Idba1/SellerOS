@@ -1,0 +1,50 @@
+# Local secrets; commit only reviewed example templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Python environments, caches and generated checks.
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Frontend dependencies and build/test output.
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local database artifacts, uploads and runtime logs.
+*.sqlite3
+*.sqlite3-journal
+*.db
+pgdata/
+media/
+staticfiles/
+logs/
+*.log
+
+# Local/generated evaluation assets; reviewed documentation stays tracked.
+data/raw/
+data/generated/
+artifacts/
+*.pkl
+*.pickle
+*.joblib
+
+# Operating-system and private editor files.
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
