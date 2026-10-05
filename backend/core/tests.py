@@ -31,3 +31,17 @@ class HealthTests(SimpleTestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("DJANGO_SECRET_KEY must be supplied", result.stderr)
+
+    def test_example_secret_is_rejected(self):
+        environment = os.environ.copy()
+        environment["DJANGO_SECRET_KEY"] = "REPLACE_ME"
+        result = subprocess.run(
+            [sys.executable, "manage.py", "check"],
+            cwd=Path(__file__).resolve().parents[1],
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must not use the example placeholder", result.stderr)
