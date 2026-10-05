@@ -1,5 +1,70 @@
 # SellerOS
 
+## Local setup and run — SETUP-07
+
+Verified 6 October 2026 on Windows 11 25H2 x64, PowerShell 7.6.5, Python 3.12.14, Node 22.14.0, npm 10.9.2 and PostgreSQL binaries 17.4. Historical task notes below remain as evidence; this section is the current run guide. Both members should run these steps individually and record their own results; no independent member rehearsal is claimed here.
+
+### Install and check (repository root)
+
+Open PowerShell at your checkout (`Set-Location E:\SellerOS` on the verified machine). Internet/registry access is needed for installs. Use a separately provisioned pinned Python on another machine; the bundled path below is specific to this computer:
+
+```powershell
+$sellerosPython = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+& $sellerosPython --version
+node --version
+npm --version
+# Create only when backend/.venv does not already exist.
+if (-not (Test-Path backend/.venv)) { & $sellerosPython -m venv backend/.venv }
+& backend/.venv/Scripts/python.exe --version
+& backend/.venv/Scripts/python.exe -m pip install --disable-pip-version-check -r backend/requirements.txt
+& backend/.venv/Scripts/python.exe -m pip check
+# Writable temporary cache avoids this machine's default-cache permission error.
+$env:npm_config_cache = Join-Path $env:TEMP 'selleros-npm-cache'
+npm ci --prefix frontend
+npm run typecheck --prefix frontend
+npm run build --prefix frontend
+```
+
+Stop if a command fails or the interpreter does not match `.python-version`; PowerShell does not automatically stop after every native command error. Do not reuse a mismatched environment or overwrite someone else's environment. npm ci replaces generated frontend node_modules using the committed lockfile; do not mix npm and pnpm. No globally installed Django, active virtualenv, or provider key is required.
+
+### Backend terminal (repository root)
+
+```powershell
+$env:DJANGO_SECRET_KEY = (& backend/.venv/Scripts/python.exe -c "import secrets; print(secrets.token_urlsafe(64))")
+try {
+    & backend/.venv/Scripts/python.exe backend/manage.py check
+    & backend/.venv/Scripts/python.exe backend/manage.py test core
+    & backend/.venv/Scripts/python.exe backend/manage.py runserver 127.0.0.1:8000 --noreload
+} finally {
+    Remove-Item Env:DJANGO_SECRET_KEY -ErrorAction SilentlyContinue
+}
+```
+
+Expected: system check has no issues, four tests pass, server prints its loopback URL. In a separate terminal: `Invoke-RestMethod http://127.0.0.1:8000/health/` returns status `ok`. It is process liveness only, not database/provider readiness. `.env.example` is reference-only for Django: no automatic dotenv loading. Never use `REPLACE_ME` or print a private environment file. The temporary secret is appropriate only for this stateless local skeleton; persistent environments need managed stable secrets.
+
+### Frontend terminal
+
+```powershell
+Set-Location E:\SellerOS\frontend
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open http://127.0.0.1:5173/ and expect SellerOS / Your business workspace with no browser-console errors. Use the checkout path appropriate to your machine. This shell makes no backend requests yet. There is no frontend `test` or `lint` script; current client verification is typecheck, build and browser rendering. Optional production-output check: `npm run preview -- --host 127.0.0.1 --port 4173 --strictPort`, then open the printed URL. Preview is not production hosting.
+
+### PostgreSQL and migrations
+
+`psql --version` and `postgres --version` identify installed binaries; `Get-Service -Name 'postgresql*'` checks local service state where authorized. Database readiness needs a provisioned approved development/test database, least-privilege credentials and later Django settings/driver configuration. Templates currently reserve blank DB variables; they are not used. Django has `DATABASES = {}`, no business models and no migrations, so **do not run migrations for this skeleton**.
+
+After the later database task establishes and verifies those prerequisites, the commands will be `backend/.venv/Scripts/python.exe backend/manage.py showmigrations` and `backend/.venv/Scripts/python.exe backend/manage.py migrate`. They are deferred, not claimed passing today. Do not initialize SQLite as a workaround or create a PostgreSQL database in SETUP-07. Financial/timezone/provider decisions remain open.
+
+### Shutdown and troubleshooting
+
+Press Ctrl+C in each server terminal; backend `finally` clears its temporary secret. Frontend shutdown needs no secret cleanup. If a strict port is occupied, stop your own prior server or choose another explicitly; do not kill unrelated processes. Missing Django secret: set it in the *same* backend terminal. npm engine error: verify exact Node/npm pins. Cache EPERM: use the temporary cache variable above. Health 404: request `/health/` with trailing slash. A frontend page does not prove backend/database integration.
+
+### Rehearsal evidence
+
+A fresh separate backend virtual environment was created and installed from requirements without touching the existing environment. Checks, four tests and pip dependency check passed. `npm ci`, typecheck and production build passed using the lockfile. Live backend HTTP and frontend browser/shutdown results are documented in the component READMEs. This is a clean dependency rehearsal on this machine, not a clean OS install or independent runs by both students. No migrations, provider requests or real customer data were used. Only documentation changes are part of SETUP-07; temporary rehearsal artifacts are removed after verification. Next dependency: BACKEND-01 — environment-specific Django settings, only when authorized.
+
 SE-331 standalone social-commerce seller business intelligence and decision-support capstone. SellerOS will connect seller-entered operational records with grounded reply drafts, business summaries, behavior segmentation, demand estimates, deterministic profit analysis and transparent what-if scenarios.
 
 ## Current repository baseline

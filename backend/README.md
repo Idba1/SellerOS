@@ -29,4 +29,10 @@ Settings keep DEBUG off and allow loopback hosts only. No database is configured
 - Inline Python launched `runserver 127.0.0.1:18764 --noreload`, requested `/health/` with urllib and asserted HTTP 200 and exact JSON; passed. It terminated the server in `finally`; its random environment secret was neither printed nor saved.
 - `git diff --check`: no tracked whitespace errors. `git check-ignore backend/.venv/Scripts/python.exe`: ignored as expected. Status shows only backend skeleton files/README changes; no database, secrets, frontend changes or business modules created. New source files were separately checked with `git diff --no-index --check -- NUL <file>`.
 
-No commit or push performed. Next task: SETUP-05 — React TypeScript frontend skeleton, only when authorized.
+No commit or push performed during SETUP-04.
+
+## Current local workflow — SETUP-07
+
+Follow the [root setup/run guide](../README.md#local-setup-and-run--setup-07) for pinned Python provisioning, isolated install, tests, two-terminal startup and shutdown. The current core suite has **four** tests (including missing and example-secret rejection). No migration command is applicable while `DATABASES = {}`; the root guide lists future showmigrations/migrate commands and their PostgreSQL prerequisites without claiming database readiness.
+
+6 October 2026 clean rehearsal: created a separate `backend/.venv-rehearsal` using pinned Python; installed `-r backend/requirements.txt`; ran `manage.py check` (no issues), `manage.py test core` (4 passed) and `pip check` (no broken requirements). An inline Python process supervisor ran that environment's `manage.py runserver 127.0.0.1:8000 --noreload`, verified exact HTTP 200 health JSON, then terminated/waited for the process in `finally`. The temporary secret was process-only. The separate environment was removed afterward; existing `.venv` preserved. No migration, database/provider call, or real data was used. Shutdown must stop the actual server process, not just its terminal wrapper.
