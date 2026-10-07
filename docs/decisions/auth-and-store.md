@@ -6,6 +6,7 @@ PLAN-04, 5 October 2026. Documentation and proposed ERD only. **Status: APPROVED
 
 [PLAN-02 scope](../requirements/scope.md) leaves account/store cardinality and staff membership open (D-03). [Traceability](../requirements/traceability.csv) requires authorized profile creation/update (FR-01), authenticated server-side store isolation (NFR-01), customer privacy (NFR-02), and normalized store-related records (NFR-08). [PLAN-03](order-and-inventory.md) requires same-store ownership checks before order/inventory effects.
 
+
 Inspection found a clean working tree on branch `docs`, the existing requirements and PLAN-03 documents, `check.py`, and two source documents. No application, authentication models, API contract or existing access policy exists. PLAN-03's DR-01–DR-08 remain unresolved; PLAN-04 does not change them. The presence of a decision document does not claim that all prerequisite business questions were resolved.
 
 Retain React/Vite/TypeScript and the approved UI libraries, Python/Django/DRF/Django ORM, and PostgreSQL. Authentication/authorization executes server-side. This document neither installs a framework nor selects authentication transport/storage settings.
