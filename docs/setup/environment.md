@@ -4,9 +4,26 @@ SETUP-06, 6 October 2026. Placeholder-only [backend template](../../backend/.env
 
 ## Current behavior
 
+BACKEND-01 (8 October 2026) separates `config.settings.base`, `.local` and `.test`. Management/ASGI/WSGI entry points default to `config.settings.local`; explicitly configured `config.settings` must be changed to `.local` or `.test`. The settings namespace does not import local configuration, so test mode cannot load private `.env` values. Select a mode explicitly using `--settings=config.settings.local` or `--settings=config.settings.test`, or export `DJANGO_SETTINGS_MODULE` in the server process. Neither mode supplies a fallback secret. Local mode loads backend/.env before shared validation; test mode never loads it.
+
+Local `DJANGO_DEBUG` defaults to false and accepts case-insensitive true/false only; invalid values fail clearly. Test mode always disables DEBUG regardless of that local flag. Local allowed hosts remain localhost/127.0.0.1/[::1]; test mode adds testserver. No wildcard or external-host setting is introduced. Installed apps remain the minimal core app; authentication/DRF/database wiring belongs to later tasks.
+
+`TIME_ZONE = UTC` and `USE_TZ = True` define the technical skeleton baseline, not store analytics grouping or a resolution of PLAN-03 DR-07. Static collection destination is backend/staticfiles and media destination backend/media (both ignored). No directories are created automatically, no upload handlers or media-serving URL routes exist, and staticfiles app/collection is not enabled yet. Deployment storage/access policy remains future work.
+
+Verified commands (process-only random secret supplied, then removed):
+
+```powershell
+& backend/.venv/Scripts/python.exe backend/manage.py check --settings=config.settings.local
+& backend/.venv/Scripts/python.exe backend/manage.py check --settings=config.settings.test
+& backend/.venv/Scripts/python.exe backend/manage.py test core --settings=config.settings.test
+& backend/.venv/Scripts/python.exe backend/manage.py test core --settings=config.settings.local
+```
+
+Both checks reported no issues; six tests passed in each mode, including health behavior, missing/example secrets, debug flag validation and mode isolation. These are local/test checks, not deployment security checks or PostgreSQL readiness. No secret, database, dependency or business feature added. `git diff --check` and no-index checks for new source files reported no whitespace errors. Next task is BACKEND-02, only when authorized.
+
 Django reads `DJANGO_SECRET_KEY` from the process environment. Missing/blank values fail with `DJANGO_SECRET_KEY must be supplied in the environment.` The exact example marker `REPLACE_ME` fails with `DJANGO_SECRET_KEY must not use the example placeholder.` No insecure fallback secret exists. Other weak/arbitrary values are not guaranteed detectable; use a randomly generated secret and reviewed secret storage. Do not log or paste it.
 
-The backend does **not** load `.env` automatically. Copying the template alone does not configure Django. No dotenv dependency or loader is added by this task. For local checks from repository root, generate a temporary environment value without displaying/saving it:
+Local mode now loads `backend/.env` automatically from a path relative to settings, independent of working directory. Exported process values take precedence, including blank values which still fail validation. The dependency-free reader supports UTF-8/BOM, blank/comment lines, KEY=value and matching single/double quotes. Values are literal: no expansion, execution, escape decoding, export statements or inline-comment stripping. Syntax errors report line numbers only, not contents. Missing file falls back to process configuration; unreadable/invalid files fail clearly. Replace the example marker with a private generated value. For local checks from repository root, generate a temporary environment value without displaying/saving it:
 
 ```powershell
 $env:DJANGO_SECRET_KEY = (& backend/.venv/Scripts/python.exe -c "import secrets; print(secrets.token_urlsafe(64))")
