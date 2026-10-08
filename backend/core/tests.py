@@ -21,6 +21,7 @@ class HealthTests(SimpleTestCase):
     def test_startup_requires_environment_secret(self):
         environment = os.environ.copy()
         environment.pop("DJANGO_SECRET_KEY", None)
+        environment["DJANGO_SETTINGS_MODULE"] = "config.settings.test"
         result = subprocess.run(
             [sys.executable, "manage.py", "check"],
             cwd=Path(__file__).resolve().parents[1],
