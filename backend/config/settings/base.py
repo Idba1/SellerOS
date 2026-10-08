@@ -11,7 +11,16 @@ if not SECRET_KEY.strip():
 if SECRET_KEY.strip() == "REPLACE_ME":
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must not use the example placeholder.")
 
-INSTALLED_APPS = ["core.apps.CoreConfig"]
+INSTALLED_APPS = ["core.apps.CoreConfig", "rest_framework"]
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    # Fail closed until the separately planned authentication foundation exists.
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "UNAUTHENTICATED_USER": None,
+    "EXCEPTION_HANDLER": "core.api.exceptions.exception_handler",
+}
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",

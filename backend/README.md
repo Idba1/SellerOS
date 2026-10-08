@@ -1,5 +1,9 @@
 # Backend
 
+## DRF baseline — BACKEND-02
+
+DRF is now installed with JSON-only parsing/rendering, fail-closed permission defaults and a small shared error handler. See [response/error convention and exact checks](../docs/setup/drf-baseline.md). Existing health behavior is unchanged. The core suite now has 13 tests; older counts below are historical. Authentication, store permission enforcement, database and business APIs remain later tasks.
+
 ## Current settings — BACKEND-01
 
 Environment-specific settings now live under `config/settings/`: shared base, local and test modules. Entry points default to `config.settings.local`; explicitly use `.local` or `.test`, not the bare namespace. See [environment configuration](../docs/setup/environment.md#current-behavior) for flag validation, timezone/static/media policy and exact mode checks. Use `--settings=config.settings.test` for explicit test-mode runs. All modes require the process secret. The current suite has **six** passing tests in both local and test modes; historical test counts below refer to earlier tasks. Database configuration remains absent. Next task: BACKEND-02, only when authorized.
