@@ -1,5 +1,9 @@
 # Backend
 
+## Health and readiness — BACKEND-03
+
+`GET /health/` retains process liveness (200/status ok). `GET /ready/` separately probes database readiness; the current unconfigured database returns 503/not_configured. See [route payloads, limits and verification](../docs/setup/health-readiness.md). The suite now has 17 tests; database success/failure cases are mocked. No database configuration or provider check is implemented. Next task: BACKEND-04.
+
 ## DRF baseline — BACKEND-02
 
 DRF is now installed with JSON-only parsing/rendering, fail-closed permission defaults and a small shared error handler. See [response/error convention and exact checks](../docs/setup/drf-baseline.md). Existing health behavior is unchanged. The core suite now has 13 tests; older counts below are historical. Authentication, store permission enforcement, database and business APIs remain later tasks.
