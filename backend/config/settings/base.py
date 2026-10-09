@@ -21,6 +21,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
     "EXCEPTION_HANDLER": "core.api.exceptions.exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "core.api.pagination.StandardPagination",
+    "PAGE_SIZE": 20,
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

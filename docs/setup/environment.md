@@ -4,6 +4,8 @@ SETUP-06, 6 October 2026. Placeholder-only [backend template](../../backend/.env
 
 ## Current behavior
 
+BACKEND-04 update: both modes now require validated PostgreSQL variables, including a distinct disposable DB_TEST_NAME. [PostgreSQL instructions](postgresql.md) supersede earlier database-free notes below. Local reads private .env; test mode requires exported values. Reserved LLM fields remain unused. Live PostgreSQL connection, migration smoke and all 21 tests passed on 10 October 2026; no SQLite fallback exists.
+
 BACKEND-01 (8 October 2026) separates `config.settings.base`, `.local` and `.test`. Management/ASGI/WSGI entry points default to `config.settings.local`; explicitly configured `config.settings` must be changed to `.local` or `.test`. The settings namespace does not import local configuration, so test mode cannot load private `.env` values. Select a mode explicitly using `--settings=config.settings.local` or `--settings=config.settings.test`, or export `DJANGO_SETTINGS_MODULE` in the server process. Neither mode supplies a fallback secret. Local mode loads backend/.env before shared validation; test mode never loads it.
 
 Local `DJANGO_DEBUG` defaults to false and accepts case-insensitive true/false only; invalid values fail clearly. Test mode always disables DEBUG regardless of that local flag. Local allowed hosts remain localhost/127.0.0.1/[::1]; test mode adds testserver. No wildcard or external-host setting is introduced. Installed apps remain the minimal core app; authentication/DRF/database wiring belongs to later tasks.
