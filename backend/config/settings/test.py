@@ -1,4 +1,4 @@
-"""Explicit database-free test mode with debug disabled."""
+"""Explicit PostgreSQL test mode; credentials must be exported, not read from .env."""
 from .base import *  # noqa: F403
 
 DEBUG = False

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from core.database import postgres_database
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
@@ -20,6 +21,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
     "EXCEPTION_HANDLER": "core.api.exceptions.exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "core.api.pagination.StandardPagination",
+    "PAGE_SIZE": 20,
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -28,7 +31,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
-DATABASES = {}
+DATABASES = {"default": postgres_database(os.environ)}
 USE_TZ = True
 # Technical Django default, not the business date-grouping policy (PLAN-03 DR-07).
 TIME_ZONE = "UTC"
