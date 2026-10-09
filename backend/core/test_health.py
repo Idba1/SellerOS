@@ -15,7 +15,9 @@ class ReadinessTests(SimpleTestCase):
         return dependency, cursor
 
     def test_unconfigured_database_is_not_ready(self):
-        response = self.client.get(reverse("readiness"))
+        with patch("core.health.connections") as dependency:
+            dependency.databases = {}
+            response = self.client.get(reverse("readiness"))
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {
             "status": "not_ready", "checks": {"app": "ok", "database": "not_configured"},
@@ -47,5 +49,6 @@ class ReadinessTests(SimpleTestCase):
         dependency, _ = self.probe(result=None)
         with patch("core.health.connections", dependency):
             self.assertEqual(self.client.get(reverse("readiness")).status_code, 503)
-        self.assertEqual(self.client.head(reverse("readiness")).status_code, 503)
+        with patch("core.health.connections", dependency):
+            self.assertEqual(self.client.head(reverse("readiness")).status_code, 503)
         self.assertEqual(self.client.post(reverse("readiness")).status_code, 405)
