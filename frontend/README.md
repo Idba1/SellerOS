@@ -1,6 +1,26 @@
 # Frontend
 
-SETUP-05 minimal React/TypeScript SellerOS shell, styled with Tailwind's Vite plugin. No business screens, routes, API requests, authentication or generated demo data. Node 22.14.0 and npm 10.9.2 pins are retained. Exact dependency versions and transitive resolution are recorded in package.json/package-lock.json.
+React/TypeScript SellerOS shell, styled with Tailwind's Vite plugin. FRONTEND-01 adds accessible navigation and route placeholders only; no API requests, authentication, business actions or generated demo data. Node 22.14.0 and npm 10.9.2 pins are retained. Exact dependency versions and transitive resolution are recorded in package.json/package-lock.json.
+
+## Application shell — FRONTEND-01
+
+`src/app/routes.ts` is the shared UI route register: `/` (dashboard), `/products`, `/inventory`, `/customers`, `/orders`, `/expenses`, `/profit`, `/assistant`, `/advisor`, `/segments`, `/forecast`, `/simulator`, and `/settings`. These placeholders map to the approved scope and do not claim implemented features. They are UI paths, separate from `/api/v1/`. Unknown paths show a not-found state and dashboard recovery link. Trailing slashes are accepted; query strings do not affect route selection.
+
+Navigation uses native links and full document navigation, including normal browser back/forward behavior, without another routing dependency. Vite serves direct application URLs locally; future deployment must serve index.html for UI paths while keeping API/static handling separate. The shell includes a keyboard skip link, semantic landmarks, visible focus, current-page indication, and mobile navigation. No permissions are implemented here: all links are visible placeholders; server authorization and later authenticated route handling remain separate tasks. Store settings/user-management access must follow the approved owner/staff policy when implemented.
+
+### Verification — 13 October 2026
+
+- `npm run build --prefix frontend`: TypeScript and Vite passed (30 modules). Initial sandbox attempt failed with filesystem EPERM; elevated retry passed.
+- Browser smoke command from repository root, using the pre-existing bundled Playwright and installed Edge:
+
+```powershell
+$env:NODE_PATH = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+node frontend/tests/shell-smoke.cjs
+```
+
+Passed all 13 direct route headings/current-page/title checks, trailing slash/query handling, not-found recovery, keyboard skip-link and navigation activation, 375px/1280px overflow checks, and no console/page errors. The script starts/stops its own loopback Vite server on port 18767 and closes its browser; no project dependency was added. The sandbox attempt could not reach the test server; elevated retry passed. These checks are not a complete accessibility certification or authentication test. Other machines need an existing Playwright installation and Edge to run this optional browser script; typecheck/build use project tooling only.
+
+No business-rule decision was made. Next task: FRONTEND-02 shared API client/error handling; no API client added here.
 
 From `frontend/`:
 

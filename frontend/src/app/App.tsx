@@ -1,17 +1,49 @@
+import { useEffect } from 'react'
+import { routes, resolveRoute } from './routes'
+
 export function App() {
+  const route = resolveRoute(window.location.pathname)
+  const title = route?.title ?? 'Page not found'
+  useEffect(() => { document.title = `${title} | SellerOS` }, [title])
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-6 py-5">
-        <div className="mx-auto max-w-5xl text-xl font-semibold">SellerOS</div>
+    <div className="workspace">
+      <a className="skip-link" href="#main-content">Skip to main content</a>
+      <header className="site-header">
+        <a className="brand" href="/">SellerOS</a>
+        <p>Social-commerce decision support</p>
       </header>
-      <main className="mx-auto max-w-5xl px-6 py-16">
-        <p className="text-sm font-medium text-slate-600">Social-commerce decision support</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight">Your business workspace</h1>
-        <p className="mt-5 max-w-xl leading-7 text-slate-600">
-          SellerOS will bring your business records and insights together.
-          The application foundation is ready; business features are coming in later tasks.
-        </p>
-      </main>
+      <div className="workspace-body">
+        <nav aria-label="Main navigation">
+          <ul className="nav-list">
+            {routes.map((item) => (
+              <li key={item.path}>
+                <a href={item.path} aria-current={item === route ? 'page' : undefined}>
+                  {item.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <main id="main-content" tabIndex={-1}>
+          <p className="eyebrow">Your business workspace</p>
+          <h1>{title}</h1>
+          {route ? (
+            <>
+              <p>{route.description}</p>
+              <section className="placeholder" aria-labelledby="placeholder-title">
+                <h2 id="placeholder-title">Coming in a later development task</h2>
+                <p>This page is a navigation placeholder. Business records and actions are not available yet.</p>
+              </section>
+            </>
+          ) : (
+            <>
+              <p>This address does not match a SellerOS page.</p>
+              <a href="/">Return to dashboard</a>
+            </>
+          )}
+        </main>
+      </div>
     </div>
   )
 }
