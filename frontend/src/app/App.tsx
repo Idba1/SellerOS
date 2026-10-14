@@ -2,11 +2,13 @@ import { useEffect } from 'react'
 import { resolveRoute } from './routes'
 import { AppLayout } from './AppLayout'
 import { Badge, Card } from '../ui/primitives'
+import { Dashboard } from '../dashboard/Dashboard'
 
 export function App() {
   const route = resolveRoute(window.location.pathname)
   const title = route?.title ?? 'Page not found'
   useEffect(() => { document.title = `${title} | SellerOS` }, [title])
+  if (route?.path === '/') return <AppLayout title={title} path={route.path}><Dashboard /></AppLayout>
   return <AppLayout title={title} path={route?.path}>
     <div className="page-heading"><div><p className="eyebrow">YOUR BUSINESS WORKSPACE</p><h1>{title}</h1><p className="page-description">{route?.description ?? 'This address does not match a SellerOS page.'}</p></div><Badge tone="accent">{route ? 'Preview' : 'Not found'}</Badge></div>
     {route ? <>

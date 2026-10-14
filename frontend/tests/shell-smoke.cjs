@@ -26,7 +26,18 @@ const path = require('node:path')
     assert.equal(await page.locator('aside .brand').count(), 1)
     assert.equal(await page.locator('.topbar-title').textContent(), 'Dashboard')
     assert.equal(await page.locator('.profile').getAttribute('aria-label'), 'Demo profile placeholder')
-    assert.equal(await page.locator('.card').count(), 3)
+    assert.equal(await page.locator('.kpi-card').count(), 4)
+    assert.equal(await page.locator('.kpi-value').first().textContent(), '720')
+    await page.getByLabel('Demo period').selectOption('3')
+    assert.equal(await page.locator('.kpi-value').first().textContent(), '240')
+    assert.equal(await page.locator('.kpi-value').nth(1).textContent(), '2')
+    for (const state of ['loading', 'empty', 'error', 'unavailable']) {
+      await page.getByLabel('Preview state').selectOption(state)
+      assert.equal(await page.locator('.kpi-card').count(), 0)
+      assert.equal(await page.locator('.dashboard-state').count(), 1)
+    }
+    await page.getByRole('button', { name: 'Show synthetic sample' }).click()
+    await page.getByLabel('Demo period').selectOption('7')
     const links = await page.locator('nav a').evaluateAll(items => items.map(item => ({ path: item.getAttribute('href'), title: item.textContent })))
     assert.equal(links.length, 13)
     for (const link of links) {
@@ -57,6 +68,7 @@ const path = require('node:path')
     await page.waitForURL('**/products')
     assert.equal(await page.locator('h1').textContent(), 'Products')
     for (const width of [375, 1280]) {
+      await page.goto('http://127.0.0.1:18767/')
       await page.setViewportSize({ width, height: 800 })
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `No horizontal overflow at ${width}`)
     }
