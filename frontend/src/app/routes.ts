@@ -5,6 +5,7 @@ export const routes = [
   { path: '/customers', title: 'Customers', description: 'Customer records and purchase history.' },
   { path: '/orders', title: 'Orders', description: 'Order records and progress.' },
   { path: '/expenses', title: 'Expenses', description: 'Recorded business expenses.' },
+  { path: '/analytics', title: 'Analytics', description: 'Descriptive sales patterns and data limitations.' },
   { path: '/profit', title: 'Profit intelligence', description: 'Estimated profit from recorded costs.' },
   { path: '/assistant', title: 'Customer assistant', description: 'Customer reply drafts for seller review.' },
   { path: '/advisor', title: 'Business advisor', description: 'Insights grounded in business metrics.' },

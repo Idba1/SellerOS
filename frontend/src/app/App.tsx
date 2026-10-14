@@ -5,12 +5,14 @@ import { Badge, Card } from '../ui/primitives'
 import { Dashboard } from '../dashboard/Dashboard'
 import { Products } from '../products/Products'
 import { Orders } from '../orders/Orders'
+import { Analytics } from '../analytics/Analytics'
 
 export function App() {
   const route = resolveRoute(window.location.pathname)
   const title = route?.title ?? 'Page not found'
   useEffect(() => { document.title = `${title} | SellerOS` }, [title])
   if (route?.path === '/') return <AppLayout title={title} path={route.path}><Dashboard /></AppLayout>
+  if (route?.path === '/analytics') return <AppLayout title={title} path={route.path}><Analytics /></AppLayout>
   if (route?.path === '/orders') return <AppLayout title={title} path={route.path}><Orders /></AppLayout>
   if (route?.path === '/products' || route?.path === '/inventory') return <AppLayout title={title} path={route.path}><Products inventory={route.path === '/inventory'} /></AppLayout>
   return <AppLayout title={title} path={route?.path}>
@@ -18,7 +20,7 @@ export function App() {
     {route ? <>
       <Card className="feature-placeholder" aria-labelledby="placeholder-title">
         <div className="placeholder-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="16" rx="3" /><path d="M3 9h18M8 13h8M8 16h5" /></svg></div>
-        <Badge>Planned feature</Badge><h2 id="placeholder-title">Your {title.toLowerCase()} workspace is taking shape</h2><p>This page is a navigation placeholder. Business records and actions will be available in a later development task.</p>
+        <Badge>Unavailable</Badge><h2 id="placeholder-title">This feature is not available yet</h2><p>This is a planned workspace. Its data contract and implementation are required before business records or actions can be shown.</p>
         <div className="placeholder-footnote">No live data or generated results are displayed.</div>
       </Card>
       <div className="support-grid">

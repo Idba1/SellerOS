@@ -111,3 +111,26 @@ Inspected clean frontend at fc38b97, existing shell/routes/dashboard/catalogue, 
 [DECISION REQUIRED] Final order schema/payment representation, production date semantics/currency/rounding and prior PLAN-03 DR-01–08 gaps remain open. Authenticated store-scoped backend support is required for live management. No permission/authentication/backend change was made.
 
 Verification: `npm run typecheck --prefix frontend` passed; `node frontend/tests/run-api-tests.cjs` passed 7 existing tests; `npm run build --prefix frontend` passed (38 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed order summary/search/status/date bounds/invalid range/reset/zero matches/keyboard details, four preview states/recovery, previous dashboard/catalogue/13 routes and 375px/1280px overflow/console checks. Desktop screenshot reviewed. `git diff --check` passed; no lint script exists. Build/browser used elevated execution for known local sandbox restrictions. No added dependencies or real customer records.
+
+## Analytics and stakeholder demo — FRONTEND-UI-05 (14 October 2026)
+
+Initial frontend tree clean at f07bf5d; inspected shell/dashboard/products/orders, routes, shared components, manifest, API contract, analytics decisions and backend URLs. No live analytics endpoint/schema exists. New /analytics UI uses the existing isolated dashboard fixture (not the API client) so its 720/3/240 full-window sample totals align with dashboard presentation. Order/catalogue fixtures remain independent examples, not a coherent live store. No backend/API-contract/authentication/business-rule edits or dependencies added.
+
+Analytics date-only range filters within fixed 8–14 Oct 2026 fixture coverage update delivered sample revenue/count/average and daily chart/table. Invalid ranges hide outputs and announce an error; outside-coverage/no-record ranges show no data. Zero bars describe fixture absence, not proof of real zero sales. Loading/empty/error/live-unavailable views are explicit static previews, not actual requests. Profit, forecasts, recommendations, segmentation and scenarios display Unavailable; open financial/date/currency/data-sufficiency/threshold/scenario decisions remain unresolved.
+
+Completed visual demo screens: Dashboard, Products, Inventory, Orders, Analytics. Remaining planned routes resolve with consistent titles and an explicit unavailable explanation. Native-link routing/full page reload and accessible skip link remain unchanged. Charts use inline SVG and readable table alternatives; analytics chart overflow region is keyboard focusable. Restrained shared colors/spacing/cards/badges remain consistent; fixed dashboard KPI typography specificity so values retain the intended dark text. No temporary debugging artifacts were found; optional screenshot output stays in OS temp, not source control.
+
+Final commands from repository root:
+
+```powershell
+npm run typecheck --prefix frontend
+node frontend/tests/run-api-tests.cjs
+npm run build --prefix frontend
+$env:NODE_PATH = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+node frontend/tests/shell-smoke.cjs
+git diff --check
+```
+
+All passed: 7 API unit tests; production build (39 modules); 14 route headings/titles/current-page states, existing dashboard/catalogue/order interactions, analytics ranges/reset/invalid/outside coverage/chart table and preview states, keyboard/404/console checks, and every route at 375px/1280px without document overflow. Desktop analytics screenshot visually inspected. Build/browser used elevated execution for known sandbox restrictions. No lint script exists. This is not production accessibility certification or backend integration evidence.
+
+Demo walkthrough: Dashboard (demo period) → Products/Inventory (local search and filters) → Orders (local status/date filters and details) → Analytics (date range and chart table). Every sample screen identifies synthetic data; no mutation persists. Before production: approved resource/metric schemas and authenticated store-scoped APIs, resolved planning decisions, real request lifecycle/state integration, deployment UI fallback/CORS/CSRF policy and full security/accessibility/integration verification are required. No real customer/provider data is used.

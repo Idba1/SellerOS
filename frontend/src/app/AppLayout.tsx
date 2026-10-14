@@ -4,7 +4,7 @@ import { Badge } from '../ui/primitives'
 
 const groups = [
   { label: 'Workspace', paths: ['/', '/products', '/inventory', '/customers', '/orders', '/expenses'] },
-  { label: 'Intelligence', paths: ['/profit', '/assistant', '/advisor', '/segments', '/forecast', '/simulator'] },
+  { label: 'Intelligence', paths: ['/analytics', '/profit', '/assistant', '/advisor', '/segments', '/forecast', '/simulator'] },
   { label: 'Manage', paths: ['/settings'] },
 ]
 function NavMark({ intelligence }: { intelligence: boolean }) {

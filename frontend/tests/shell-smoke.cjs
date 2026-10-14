@@ -65,6 +65,28 @@ const path = require('node:path')
     assert.equal(await page.locator('.product-table tbody tr').count(), 4)
     await page.goto('http://127.0.0.1:18767/orders')
     assert.equal(await page.locator('.order-table tbody tr').count(), 4)
+    await page.goto('http://127.0.0.1:18767/analytics')
+    assert.equal(await page.locator('.analytics-value').first().textContent(), '720')
+    await page.getByLabel('From date').fill('2026-10-12')
+    assert.equal(await page.locator('.analytics-value').first().textContent(), '240')
+    assert.equal(await page.locator('.analytics-value').nth(1).textContent(), '1')
+    await page.getByLabel('To date').fill('2026-10-11')
+    assert.equal(await page.locator('.date-error').count(), 1)
+    assert.equal(await page.locator('.analytics-metrics').count(), 0)
+    await page.getByRole('button', { name: 'Reset range' }).click()
+    await page.getByLabel('From date').fill('2027-01-01')
+    await page.getByLabel('To date').fill('2027-01-02')
+    assert.equal(await page.getByRole('heading', { name: 'No demo records in this range' }).count(), 1)
+    await page.getByRole('button', { name: 'Reset range' }).click()
+    for (const state of ['loading', 'empty', 'error', 'unavailable']) {
+      await page.getByLabel('Preview state', { exact: true }).selectOption(state)
+      assert.equal(await page.locator('.analytics-metrics').count(), 0)
+    }
+    await page.getByRole('button', { name: 'Show synthetic sample' }).click()
+    assert.equal(await page.locator('.analytics-unavailable .badge').count(), 5)
+    await page.getByText('View chart values as a table', { exact: true }).click()
+    assert.equal(await page.locator('.chart-data tbody tr').count(), 7)
+    await page.goto('http://127.0.0.1:18767/orders')
     assert.equal(await page.locator('.order-count').first().textContent(), '4')
     await page.getByLabel('Search demo orders').fill(' CUSTOMER B ')
     assert.equal(await page.locator('.order-table tbody tr').count(), 1)
@@ -95,12 +117,14 @@ const path = require('node:path')
     assert.equal(await page.locator('.order-table tbody tr').count(), 4)
     await page.goto('http://127.0.0.1:18767/')
     const links = await page.locator('nav a').evaluateAll(items => items.map(item => ({ path: item.getAttribute('href'), title: item.textContent })))
-    assert.equal(links.length, 13)
+    assert.equal(links.length, 14)
     for (const link of links) {
       await page.goto(`http://127.0.0.1:18767${link.path}`)
       assert.equal(await page.locator('h1').textContent(), link.title)
       assert.equal(await page.locator('nav a[aria-current="page"]').count(), 1)
       assert.equal(await page.title(), `${link.title} | SellerOS`)
+      assert.equal(await page.locator('.topbar-title').textContent(), link.title)
+      assert.equal(await page.locator('main').count(), 1)
     }
     await page.goto('http://127.0.0.1:18767/products/?example=1')
     assert.equal(await page.locator('h1').textContent(), 'Products')
@@ -125,14 +149,17 @@ const path = require('node:path')
     assert.equal(await page.locator('h1').textContent(), 'Products')
     for (const width of [375, 1280]) {
       await page.setViewportSize({ width, height: 800 })
-      for (const route of ['/', '/products', '/inventory', '/orders']) {
+      for (const route of links.map(link => link.path)) {
         await page.goto(`http://127.0.0.1:18767${route}`)
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `No horizontal overflow at ${width} on ${route}`)
       }
     }
     assert.deepEqual(errors, [])
-    if (process.env.SELLEROS_SCREENSHOT) await page.screenshot({ path: process.env.SELLEROS_SCREENSHOT, fullPage: true })
-    console.log('PASS: 13 routes, direct URLs, trailing slash, 404 recovery, keyboard skip/navigation, mobile/desktop overflow, and console checks')
+    if (process.env.SELLEROS_SCREENSHOT) {
+      await page.goto('http://127.0.0.1:18767/analytics')
+      await page.screenshot({ path: process.env.SELLEROS_SCREENSHOT, fullPage: true })
+    }
+    console.log('PASS: 14 routes/titles, dashboard/catalogue/orders/analytics interactions, preview states, keyboard navigation, 404 recovery, all-route mobile/desktop overflow, and console checks')
   } finally {
     if (browser) await browser.close()
     if (server.exitCode === null) {
