@@ -69,3 +69,11 @@ git diff --check
 ```
 
 Unit runner uses existing TypeScript and Node test tooling, compiles into a disposable OS temporary directory and removes it in finally. Seven tests passed: success/query/JSON, nested validation/auth/permission, explicit auth adapter, network/cancellation, unsafe URL blocking, 204/protocol/schema failures, and loading/error/stale request state. Typecheck and production build passed; build used elevated execution for known sandbox filesystem restrictions. No live business API integration, authentication flow, database change or dependency installation is claimed. Next: FRONTEND-03 reusable form/status primitives.
+
+## Shared visual system — FRONTEND-UI-01 (14 October 2026)
+
+`src/app/AppLayout.tsx` owns the grouped sidebar, SellerOS wordmark, contextual topbar, non-interactive demo profile, skip link and footer. Existing paths/native link behavior stay intact. `src/ui/primitives.tsx` provides genuinely reused Card and Badge components; semantic props are forwarded by Card. There are no fake account controls or business metrics.
+
+`src/styles/index.css` defines shared neutral surfaces, restrained blue accent, spacing tokens, typography, border/radius/shadow treatments and reusable button/input classes. Future inputs still require explicit labels and validation; no sample form is added. Responsive navigation remains visible and keyboard accessible, with single-column content on smaller screens. No fonts or icons are fetched externally; marks use inline SVG and system font fallbacks.
+
+Verification: `npm run typecheck --prefix frontend` passed; `npm run build --prefix frontend` passed (32 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed all 13 routes, title/current-page, topbar/profile/cards, keyboard skip/navigation, 404 recovery, 375px/1280px overflow and console checks. Screenshot visual review confirmed desktop alignment and restrained styling. Build/browser used elevated execution for known sandbox restrictions. `git diff --check` passed. No lint script exists. Backend, API client, dependencies and route register unchanged. Pages remain explicitly marked placeholders; authentication and business screens remain later work.

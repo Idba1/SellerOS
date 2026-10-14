@@ -23,6 +23,10 @@ const path = require('node:path')
     page.on('pageerror', error => errors.push(error.message))
     page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
     await page.goto('http://127.0.0.1:18767/')
+    assert.equal(await page.locator('aside .brand').count(), 1)
+    assert.equal(await page.locator('.topbar-title').textContent(), 'Dashboard')
+    assert.equal(await page.locator('.profile').getAttribute('aria-label'), 'Demo profile placeholder')
+    assert.equal(await page.locator('.card').count(), 3)
     const links = await page.locator('nav a').evaluateAll(items => items.map(item => ({ path: item.getAttribute('href'), title: item.textContent })))
     assert.equal(links.length, 13)
     for (const link of links) {
@@ -57,6 +61,7 @@ const path = require('node:path')
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `No horizontal overflow at ${width}`)
     }
     assert.deepEqual(errors, [])
+    if (process.env.SELLEROS_SCREENSHOT) await page.screenshot({ path: process.env.SELLEROS_SCREENSHOT, fullPage: true })
     console.log('PASS: 13 routes, direct URLs, trailing slash, 404 recovery, keyboard skip/navigation, mobile/desktop overflow, and console checks')
   } finally {
     if (browser) await browser.close()
