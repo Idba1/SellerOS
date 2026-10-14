@@ -48,3 +48,89 @@ See the [root guide](../README.md#local-setup-and-run--setup-07). From frontend 
 Clean dependency rehearsal, 6 October 2026: initial `npm ci --prefix frontend` failed with EPERM on a locked lightningcss native file. Subsequent checks failed because that interrupted install had removed tools. Port/process inspection located the earlier SellerOS Vite server on 5173; stopping that specific process required elevated execution after access denied. Once stopped, `npm ci --prefix frontend` succeeded (84 packages, zero audit vulnerabilities), `npm run typecheck --prefix frontend` passed and `npm run build --prefix frontend` passed. Do not reinstall while a server holds native modules open; do not stop unrelated processes.
 
 The live rehearsal launched Vite's CLI (the same entry point as npm's dev script) with the documented host/port/strictPort arguments, verified HTTP 200, and used bundled Playwright with installed Edge to assert the shell heading and no console/page errors. The supervisor terminated/waited for its server process in `finally`. No new browser/test package was added. Both live rehearsal servers stopped; no claim of a clean-OS or independent student test is made. Next task: BACKEND-01, only when authorized.
+
+## Shared API transport — FRONTEND-02 (14 October 2026)
+
+`src/api/client.ts` implements the BACKEND-05 direct-success/error contract without registering or calling business endpoints. `createApiClient` requires an explicit HTTP(S) base ending in `/api/v1/`. Relative resource paths and absolute pagination links must stay inside that origin/prefix and end in a slash; redirects are rejected. Query values are URL-encoded. JSON requests send Accept/Content-Type headers as appropriate. No automatic retries, login redirects, token storage, provider keys, or background requests are added.
+
+`src/api/config.ts` lazily reads public `VITE_API_BASE_URL`; missing/invalid configuration fails before a request. Example: `http://127.0.0.1:8000/api/v1/`. The placeholder shell does not import this client or require API configuration. Endpoint callers supply a `decode(unknown)` function that validates their approved response schema; TypeScript generics alone do not validate network data. A successful 204 returns undefined. Non-JSON, malformed envelopes and rejected success schemas become safe protocol errors without retaining raw bodies. DRF nested details and status/code remain available for field errors. Network/cancellation failures use safe messages; future UI must render details as text, never HTML.
+
+Authentication transport remains [DECISION REQUIRED] until AUTH tasks: default credentials are omitted. `credentials` and a per-request `authHeaders` callback are explicit extension points, not an approved token/session implementation. 401 or 403 authentication codes are distinguished from 403 permission_denied. Cross-origin cookies/CSRF/CORS must be configured under the chosen authentication policy before enabling credentials; the client does not bypass backend authorization.
+
+`createRequestState` exposes idle/loading/success/error snapshots, subscription and an async run method for screen operations (compatible with a future useSyncExternalStore consumer). Latest-started requests own state, so stale completions cannot overwrite newer results. Consumers handle the returned promise, provide AbortSignal when needed, and own lifecycle cancellation. No UI status components or feature fetching are introduced here.
+
+Verification from repository root:
+
+```powershell
+node frontend/tests/run-api-tests.cjs
+npm run typecheck --prefix frontend
+npm run build --prefix frontend
+git diff --check
+```
+
+Unit runner uses existing TypeScript and Node test tooling, compiles into a disposable OS temporary directory and removes it in finally. Seven tests passed: success/query/JSON, nested validation/auth/permission, explicit auth adapter, network/cancellation, unsafe URL blocking, 204/protocol/schema failures, and loading/error/stale request state. Typecheck and production build passed; build used elevated execution for known sandbox filesystem restrictions. No live business API integration, authentication flow, database change or dependency installation is claimed. Next: FRONTEND-03 reusable form/status primitives.
+
+## Shared visual system — FRONTEND-UI-01 (14 October 2026)
+
+`src/app/AppLayout.tsx` owns the grouped sidebar, SellerOS wordmark, contextual topbar, non-interactive demo profile, skip link and footer. Existing paths/native link behavior stay intact. `src/ui/primitives.tsx` provides genuinely reused Card and Badge components; semantic props are forwarded by Card. There are no fake account controls or business metrics.
+
+`src/styles/index.css` defines shared neutral surfaces, restrained blue accent, spacing tokens, typography, border/radius/shadow treatments and reusable button/input classes. Future inputs still require explicit labels and validation; no sample form is added. Responsive navigation remains visible and keyboard accessible, with single-column content on smaller screens. No fonts or icons are fetched externally; marks use inline SVG and system font fallbacks.
+
+Verification: `npm run typecheck --prefix frontend` passed; `npm run build --prefix frontend` passed (32 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed all 13 routes, title/current-page, topbar/profile/cards, keyboard skip/navigation, 404 recovery, 375px/1280px overflow and console checks. Screenshot visual review confirmed desktop alignment and restrained styling. Build/browser used elevated execution for known sandbox restrictions. `git diff --check` passed. No lint script exists. Backend, API client, dependencies and route register unchanged. Pages remain explicitly marked placeholders; authentication and business screens remain later work.
+
+## Dashboard overview — FRONTEND-UI-02 (14 October 2026)
+
+Inspected clean frontend branch at ecbfff4, shared shell/design components, manifests/API types, BACKEND-05 contract and backend URLs. Only health/readiness endpoints exist; there is no approved live dashboard/resource response schema. Dashboard therefore performs no API calls and imports no API client. Every section is explicitly synthetic/demo-only.
+
+Sources: `src/dashboard/demo.ts` holds four fictional orders, three fictional inventory products and a fixed 8–14 October 2026 date range. Revenue/chart sum only delivered fixture amounts; average divides by delivered fixture count; order count includes every selected fixture status. Inventory attention uses stock <= each fictional threshold. These are presentation arithmetic, not production financial rules; amounts use fictional units, without choosing currency. No customer data, returns/cost/profit modeling or AI predictions appear. The 3/7-day selector really filters these records and updates KPIs, chart and orders; inventory remains a current fictional snapshot.
+
+`Dashboard.tsx` renders matching KPI cards, an inline SVG daily chart with descriptive accessible text and a table alternative, demo orders and inventory attention. Preview-state selector explicitly demonstrates loading/empty/error states and live-unavailable messaging; it does not simulate actual network requests or confuse absent data with zero. Other routes retain their placeholders.
+
+Verification: `npm run typecheck --prefix frontend` passed; `node frontend/tests/run-api-tests.cjs` passed all 7 existing API tests; `npm run build --prefix frontend` passed (34 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed dashboard totals (720 for 7 days, 240 for 3 days), period order counts, four preview states/recovery, existing 13 routes, keyboard, 404, 375px/1280px overflow and console checks. Desktop screenshot visually reviewed. `git diff --check` passed; no lint script exists. No dependency/backend/authentication change. Live integration remains blocked until metric definitions, authorized endpoints and resource schemas are approved.
+
+## Products and inventory preview — FRONTEND-UI-03 (14 October 2026)
+
+Inspected clean frontend at 7c8b9c2, routes/dashboard/shared components, API types/client and backend URLs. There are no business models, serializers or registered product/inventory endpoints. Generic BACKEND-05 transport conventions are not a product field schema. No backend or API transport changes are made.
+
+`src/products/demo.ts` isolates four synthetic catalogue records (demo reference, name, category, fictional-unit price, stock). This is a presentation fixture, not a proposed production serializer. No SKU, variant, availability or low-stock threshold policy is selected. Dashboard and catalogue fixtures are independent visual examples, not synchronized store records. `Products.tsx` is reused by the existing /products and /inventory routes. Both are clearly marked read-only synthetic previews.
+
+Functional local controls: case-insensitive trimmed name/category search; exact category filter; zero/positive recorded-quantity filters; clear filters; native keyboard-accessible read-only details; cross-links between the existing workspaces. Count is derived from filtered fixture records. Stock badges show exact units, not low-stock/availability classifications. Preview-state control demonstrates static loading, empty, error and live-unavailable states without making requests. No create/edit/delete/deactivate/stock-adjust buttons or persistence claims exist.
+
+[DECISION REQUIRED] Live field schema, SKU uniqueness, variants, currency/rounding and stock/availability policy remain pending the previously recorded decisions and DB/API tasks. Seller-configured low-stock thresholds are not invented here. Authorized store-scoped read/write endpoints are prerequisites to actual management.
+
+Verification: `npm run typecheck --prefix frontend` passed; `node frontend/tests/run-api-tests.cjs` passed all 7 existing tests; `npm run build --prefix frontend` passed (36 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed search/category/stock combinations, zero matches/clear, keyboard details, all preview states/recovery, both product/inventory routes, existing dashboard/13 routes, keyboard/404/console and 375px/1280px overflow checks. Initial browser test used an exact label selector that timed out; corrected to the accessible combobox selector and rerun passed. Desktop screenshot visually reviewed. `git diff --check` passed. No lint script, added dependencies, API requests, backend changes or real-data test claimed.
+
+## Order review — FRONTEND-UI-04 (14 October 2026)
+
+Inspected clean frontend at fc38b97, existing shell/routes/dashboard/catalogue, shared transport/types, BACKEND-05 API contract and PLAN-03 decisions. Backend registers only health/readiness; no order model, serializer or business endpoint exists. No API call or second transport was introduced. Live integration must use the existing API client after an authorized order schema exists.
+
+`src/orders/demo.ts` holds four independent synthetic orders/customer labels, dated 8–14 October 2026, with fictional-unit amounts. These fixtures are not an API contract or synchronized dashboard/store data. Display statuses use the approved common subset Confirmed/Processing/Shipped/Delivered, avoiding unresolved New/PENDING mapping. No payment status, refund transitions, revenue recognition or stock effects are invented.
+
+`Orders.tsx` replaces only the /orders placeholder. Summary counts use the entire fixture (explicitly not filtered). Search matches trimmed case-insensitive reference/customer labels; status and inclusive order-date filters combine correctly. Dates are date-only synthetic values formatted consistently without local timezone shifts; this does not choose the production financial timezone. Reversed date range displays an accessible error and hides results. Native details disclose only fixture fields and missing payment information. All interactions are read-only; no create/status/payment/refund/cancellation actions exist. Preview selector explicitly demonstrates static loading/empty/error/unavailable states without network claims.
+
+[DECISION REQUIRED] Final order schema/payment representation, production date semantics/currency/rounding and prior PLAN-03 DR-01–08 gaps remain open. Authenticated store-scoped backend support is required for live management. No permission/authentication/backend change was made.
+
+Verification: `npm run typecheck --prefix frontend` passed; `node frontend/tests/run-api-tests.cjs` passed 7 existing tests; `npm run build --prefix frontend` passed (38 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed order summary/search/status/date bounds/invalid range/reset/zero matches/keyboard details, four preview states/recovery, previous dashboard/catalogue/13 routes and 375px/1280px overflow/console checks. Desktop screenshot reviewed. `git diff --check` passed; no lint script exists. Build/browser used elevated execution for known local sandbox restrictions. No added dependencies or real customer records.
+
+## Analytics and stakeholder demo — FRONTEND-UI-05 (14 October 2026)
+
+Initial frontend tree clean at f07bf5d; inspected shell/dashboard/products/orders, routes, shared components, manifest, API contract, analytics decisions and backend URLs. No live analytics endpoint/schema exists. New /analytics UI uses the existing isolated dashboard fixture (not the API client) so its 720/3/240 full-window sample totals align with dashboard presentation. Order/catalogue fixtures remain independent examples, not a coherent live store. No backend/API-contract/authentication/business-rule edits or dependencies added.
+
+Analytics date-only range filters within fixed 8–14 Oct 2026 fixture coverage update delivered sample revenue/count/average and daily chart/table. Invalid ranges hide outputs and announce an error; outside-coverage/no-record ranges show no data. Zero bars describe fixture absence, not proof of real zero sales. Loading/empty/error/live-unavailable views are explicit static previews, not actual requests. Profit, forecasts, recommendations, segmentation and scenarios display Unavailable; open financial/date/currency/data-sufficiency/threshold/scenario decisions remain unresolved.
+
+Completed visual demo screens: Dashboard, Products, Inventory, Orders, Analytics. Remaining planned routes resolve with consistent titles and an explicit unavailable explanation. Native-link routing/full page reload and accessible skip link remain unchanged. Charts use inline SVG and readable table alternatives; analytics chart overflow region is keyboard focusable. Restrained shared colors/spacing/cards/badges remain consistent; fixed dashboard KPI typography specificity so values retain the intended dark text. No temporary debugging artifacts were found; optional screenshot output stays in OS temp, not source control.
+
+Final commands from repository root:
+
+```powershell
+npm run typecheck --prefix frontend
+node frontend/tests/run-api-tests.cjs
+npm run build --prefix frontend
+$env:NODE_PATH = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+node frontend/tests/shell-smoke.cjs
+git diff --check
+```
+
+All passed: 7 API unit tests; production build (39 modules); 14 route headings/titles/current-page states, existing dashboard/catalogue/order interactions, analytics ranges/reset/invalid/outside coverage/chart table and preview states, keyboard/404/console checks, and every route at 375px/1280px without document overflow. Desktop analytics screenshot visually inspected. Build/browser used elevated execution for known sandbox restrictions. No lint script exists. This is not production accessibility certification or backend integration evidence.
+
+Demo walkthrough: Dashboard (demo period) → Products/Inventory (local search and filters) → Orders (local status/date filters and details) → Analytics (date range and chart table). Every sample screen identifies synthetic data; no mutation persists. Before production: approved resource/metric schemas and authenticated store-scoped APIs, resolved planning decisions, real request lifecycle/state integration, deployment UI fallback/CORS/CSRF policy and full security/accessibility/integration verification are required. No real customer/provider data is used.
