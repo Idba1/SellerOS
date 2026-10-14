@@ -48,3 +48,24 @@ See the [root guide](../README.md#local-setup-and-run--setup-07). From frontend 
 Clean dependency rehearsal, 6 October 2026: initial `npm ci --prefix frontend` failed with EPERM on a locked lightningcss native file. Subsequent checks failed because that interrupted install had removed tools. Port/process inspection located the earlier SellerOS Vite server on 5173; stopping that specific process required elevated execution after access denied. Once stopped, `npm ci --prefix frontend` succeeded (84 packages, zero audit vulnerabilities), `npm run typecheck --prefix frontend` passed and `npm run build --prefix frontend` passed. Do not reinstall while a server holds native modules open; do not stop unrelated processes.
 
 The live rehearsal launched Vite's CLI (the same entry point as npm's dev script) with the documented host/port/strictPort arguments, verified HTTP 200, and used bundled Playwright with installed Edge to assert the shell heading and no console/page errors. The supervisor terminated/waited for its server process in `finally`. No new browser/test package was added. Both live rehearsal servers stopped; no claim of a clean-OS or independent student test is made. Next task: BACKEND-01, only when authorized.
+
+## Shared API transport — FRONTEND-02 (14 October 2026)
+
+`src/api/client.ts` implements the BACKEND-05 direct-success/error contract without registering or calling business endpoints. `createApiClient` requires an explicit HTTP(S) base ending in `/api/v1/`. Relative resource paths and absolute pagination links must stay inside that origin/prefix and end in a slash; redirects are rejected. Query values are URL-encoded. JSON requests send Accept/Content-Type headers as appropriate. No automatic retries, login redirects, token storage, provider keys, or background requests are added.
+
+`src/api/config.ts` lazily reads public `VITE_API_BASE_URL`; missing/invalid configuration fails before a request. Example: `http://127.0.0.1:8000/api/v1/`. The placeholder shell does not import this client or require API configuration. Endpoint callers supply a `decode(unknown)` function that validates their approved response schema; TypeScript generics alone do not validate network data. A successful 204 returns undefined. Non-JSON, malformed envelopes and rejected success schemas become safe protocol errors without retaining raw bodies. DRF nested details and status/code remain available for field errors. Network/cancellation failures use safe messages; future UI must render details as text, never HTML.
+
+Authentication transport remains [DECISION REQUIRED] until AUTH tasks: default credentials are omitted. `credentials` and a per-request `authHeaders` callback are explicit extension points, not an approved token/session implementation. 401 or 403 authentication codes are distinguished from 403 permission_denied. Cross-origin cookies/CSRF/CORS must be configured under the chosen authentication policy before enabling credentials; the client does not bypass backend authorization.
+
+`createRequestState` exposes idle/loading/success/error snapshots, subscription and an async run method for screen operations (compatible with a future useSyncExternalStore consumer). Latest-started requests own state, so stale completions cannot overwrite newer results. Consumers handle the returned promise, provide AbortSignal when needed, and own lifecycle cancellation. No UI status components or feature fetching are introduced here.
+
+Verification from repository root:
+
+```powershell
+node frontend/tests/run-api-tests.cjs
+npm run typecheck --prefix frontend
+npm run build --prefix frontend
+git diff --check
+```
+
+Unit runner uses existing TypeScript and Node test tooling, compiles into a disposable OS temporary directory and removes it in finally. Seven tests passed: success/query/JSON, nested validation/auth/permission, explicit auth adapter, network/cancellation, unsafe URL blocking, 204/protocol/schema failures, and loading/error/stale request state. Typecheck and production build passed; build used elevated execution for known sandbox filesystem restrictions. No live business API integration, authentication flow, database change or dependency installation is claimed. Next: FRONTEND-03 reusable form/status primitives.
