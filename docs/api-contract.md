@@ -12,6 +12,12 @@ Future business APIs use `/api/v1/`, trailing slash, lowercase plural resource n
 
 Auth validation errors use the established envelope. Duplicate registration is 400/`validation_error`; unknown email, wrong password, and inactive account are 401/`authentication_failed` with the same generic detail; missing token on `/me/` is 401/`not_authenticated`. AUTH-01's IP/cache-backed limits are registration 3/hour and login 5/minute; see [authentication setup](setup/authentication.md) for validation and token-lifecycle boundaries.
 
+## AUTH-02 store-profile route
+
+`POST` and `GET /api/v1/stores/current/` use the authenticated token context rather than a client-supplied store or owner ID. `POST` accepts only `name` and optional IANA `timezone`, then creates the first store for an eligible account and returns 201 with `{"id":"<opaque UUID>","name":"...","timezone":"...","currency_code":"BDT"}`. `GET` returns that same restricted profile for an owner or active staff member. It has no update operation in AUTH-02.
+
+An owner cannot create a second store (400/`validation_error`); any staff membership prevents store creation (403/`permission_denied`), including an inactive/revoked one. Accounts without a permitted store and revoked staff receive 404/`not_found` from read. Unsupported payload fields, including `owner_id` and `currency_code`, receive 400/`validation_error` rather than being silently ignored. See [store profile setup](setup/store-profile.md).
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:
