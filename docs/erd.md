@@ -1,6 +1,6 @@
 # SellerOS logical entity-relationship design
 
-**Status:** DB-01 design record. This is a logical, editable ERD for review; it is not a Django model, migration, API contract, or approval to create database tables.
+**Status:** DB-01 logical design record. This is an editable ERD, not a Django model, migration, or API contract. Its field-level choices are defined by the later [DB-02 data dictionary](data-dictionary.md).
 
 ## 1. Purpose and design boundary
 
@@ -11,7 +11,7 @@ The diagram deliberately does not model a payment gateway, courier/social-commer
 ### Notation
 
 - `||` means exactly one, `o|` zero or one, `o{` zero or many, and `|{` one or many.
-- `PK` is a logical primary key; `FK` is a logical foreign key. The physical key type is intentionally not selected.
+- `PK` is a logical primary key; `FK` is a logical foreign key. DB-02 selects UUID physical keys and opaque UUID API IDs.
 - `NULL` in the entity notes means an optional relationship, not an authorization fallback.
 - Every direct or inherited store relationship must be validated against the authorized store. A foreign key by itself is not sufficient store isolation.
 
@@ -42,7 +42,7 @@ erDiagram
 
     STORE ||--o{ EXPENSE : records
     STORE ||--o{ ANALYSIS_LOG : scopes
-    ACCOUNT o|--o{ ANALYSIS_LOG : requests
+    ACCOUNT ||--o{ ANALYSIS_LOG : requests
 
     ACCOUNT {
         string account_id PK
@@ -123,7 +123,7 @@ erDiagram
 
 | Entity | Ownership and key | Required relationship/constraint | Open field or uniqueness question |
 | --- | --- | --- | --- |
-| Account | `account_id` is the PK and has no tenant parent. | It may own zero or one store, or hold zero or one staff membership; it cannot do both or participate in two stores. | **[DECISION REQUIRED] ERD-01 / AD-02:** login identifier, verification, activation/recovery, physical key type. |
+| Account | `account_id` is the PK and has no tenant parent. | It may own zero or one store, or hold zero or one staff membership; it cannot do both or participate in two stores. | DB-02 selects UUID IDs and email/password authentication fields; recovery/verification delivery remains outside this ERD. |
 | Store | `store_id` PK; `owner_account_id` non-null FK and unique. | Exactly one owner; an owner has at most one store. Store is the tenant root for operational records. | Store profile field dictionary and ownership-transfer/deletion policy remain open (AD-04). |
 | StoreMembership | `membership_id` PK; `store_id` and `account_id` non-null FKs. `account_id` is unique under the selected one-store staff policy. | One membership has one state such as active/revoked; only the store owner can provision or revoke it. Cross-table validation prevents an owner from also being staff. | History/re-enrolment representation after revocation is **[DECISION REQUIRED] ERD-02**; it must not weaken one-store participation. |
 | Product | `product_id` PK; `store_id` non-null FK. | Belongs to one store and supports the required active/deactivated state. | **[DECISION REQUIRED] D-08 / ERD-03:** SKU scope/uniqueness, category representation, archive/delete details, and whether variantless products use a stock unit. |
@@ -134,9 +134,9 @@ erDiagram
 | SalesOrder | `order_id` PK; `store_id` non-null FK; `customer_id` nullable FK. | Every order is store-scoped. Its customer, items, products, variants and movements must all be same-store. Seller-paid delivery cost is an order field, separate from general expenses. | **[DECISION REQUIRED] DR-01:** `New` versus `PENDING`; **DR-04/05/07/08:** monetary precision, empty-draft/quantity handling, timezone, and snapshot edit timing. |
 | OrderItem | `order_item_id` PK; `order_id` and `product_id` non-null FKs; `variant_id` nullable FK. | It retains product/variant identity, display name where needed, quantity, selling-price snapshot, confirmation-time unit-cost snapshot, and discount allocation. A confirmed order has one or more items. | A draft's item cardinality and all physical constraints await DR-05/DR-08. Repeating the same product/stock unit across lines is allowed only if later operations aggregate demand atomically. |
 | Expense | `expense_id` PK; `store_id` non-null FK. | General operating expense belongs to one store. It has no implicit order FK, because it must not be arbitrarily allocated to an order. | **[DECISION REQUIRED] DR-06/DR-08:** permitted categories, period aggregation, corrections and any separately approved order-specific cost. |
-| AnalysisLog | `analysis_log_id` PK; `store_id` non-null FK; `requested_by_account_id` nullable FK. | One record is tenant-scoped provenance for a computation or AI request. It records task, outcome, timestamp, method/model version and minimized input/reference metadata—not credentials or unrestricted raw customer content. | **[DECISION REQUIRED] DP-02/DP-04 / ERD-07:** provider/model, retained input/output content, retention/deletion, background/system initiation and exact result/evaluation structure. |
+| AnalysisLog | `analysis_log_id` PK; `store_id` and `requested_by_account_id` non-null FKs. | One record is tenant-scoped provenance for a seller-requested computation or AI request. It records task, outcome, timestamp, method/model version and minimized input/reference metadata—not credentials or unrestricted raw customer content. | DB-02 selects a 30-day minimized local-log record; provider/model approval and any stored visible result remain **[DECISION REQUIRED] DP-02**. |
 
-The nullable FKs in the diagram are `StockUnit.variant_id`, `InventoryMovement.order_item_id`, `InventoryMovement.reversal_of_movement_id`, `SalesOrder.customer_id`, `OrderItem.variant_id`, and `AnalysisLog.requested_by_account_id`. All remaining FKs shown in the table are required unless a later written decision changes the record class.
+The nullable FKs in the diagram are `StockUnit.variant_id`, `InventoryMovement.order_item_id`, `InventoryMovement.reversal_of_movement_id`, `SalesOrder.customer_id`, and `OrderItem.variant_id`. All remaining FKs shown in the table are required unless a later written decision changes the record class.
 
 ## 4. Relationship rules and historical integrity
 
@@ -150,7 +150,7 @@ The nullable FKs in the diagram are `StockUnit.variant_id`, `InventoryMovement.o
 
 ## 5. Logical delete and retention behavior
 
-Physical Django `on_delete` choices are deferred until DB-02, but later implementation must preserve these logical behaviors.
+DB-02 selects the field-level Django deletion policies; later implementation must preserve these logical behaviors.
 
 | Parent/record | Required logical behavior | Reason / remaining decision |
 | --- | --- | --- |
