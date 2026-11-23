@@ -86,6 +86,24 @@ class StoreProfileApiTests(APITestCase):
         self.assertEqual(create.data["error"]["code"], "permission_denied")
         self.assertEqual(Store.objects.count(), 1)
 
+    def test_cross_store_query_injection_is_rejected_without_foreign_data(self):
+        owner_a = self.create_account("owner-a@example.test")
+        Store.objects.create(owner=owner_a, name="Store A")
+        owner_b = self.create_account("owner-b@example.test")
+        foreign_store = Store.objects.create(owner=owner_b, name="Store B")
+        self.authenticate(owner_a)
+
+        response = self.client.get(
+            f"{reverse('store-current-profile')}?store_id={foreign_store.id}"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"]["code"], "validation_error")
+        self.assertEqual(
+            response.data["error"]["details"]["store_id"],
+            ["Unsupported query parameter."],
+        )
+
     def test_revoked_staff_and_account_without_store_cannot_read_profile(self):
         owner = self.create_account("owner@example.test")
         store = Store.objects.create(owner=owner, name="Revoked Store")

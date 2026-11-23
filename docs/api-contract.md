@@ -18,6 +18,10 @@ Auth validation errors use the established envelope. Duplicate registration is 4
 
 An owner cannot create a second store (400/`validation_error`); any staff membership prevents store creation (403/`permission_denied`), including an inactive/revoked one. Accounts without a permitted store and revoked staff receive 404/`not_found` from read. Unsupported payload fields, including `owner_id` and `currency_code`, receive 400/`validation_error` rather than being silently ignored. See [store profile setup](setup/store-profile.md).
 
+## AUTH-03 store-scope enforcement
+
+Every future store-owned list, detail, mutation, count, filter, and aggregation must begin with the server-resolved store context and a store-scoped queryset. No client-supplied store/owner/role field can select a tenant. The existing `GET /api/v1/stores/current/` route accepts no query parameters; an attempted `store_id` selector receives 400/`validation_error`, not another store's profile. See [store permission setup](setup/store-permissions.md).
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:

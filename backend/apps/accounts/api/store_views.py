@@ -1,14 +1,15 @@
 """Create and read the authenticated account's current store profile."""
 from django.db import transaction
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.models import Account, Store, StoreMembership
+from core.api.query import validate_query_parameters
+from core.permissions import require_authorized_store
 
-from .access import get_authorized_store
 from .store_serializers import StoreCreateSerializer, StoreProfileSerializer
 
 
@@ -16,9 +17,8 @@ class CurrentStoreProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        store = get_authorized_store(request.user)
-        if store is None:
-            raise NotFound("No authorized store profile was found.")
+        validate_query_parameters(request.query_params, set())
+        store = require_authorized_store(request.user)
         return Response(StoreProfileSerializer(store).data)
 
     def post(self, request):
