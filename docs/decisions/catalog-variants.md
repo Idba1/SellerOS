@@ -10,6 +10,8 @@ PRODUCT-01 implements the minimum representation already recorded in the DB-02 d
 
 This supports the approved optional-variant model without creating a second catalogue authority or client-controlled store scope. Store isolation remains server-side API work: model ownership alone does not authorize a request.
 
+PRODUCT-02 write serializers therefore accept neither `store_id` nor `product_id`. A future authorized product endpoint resolves the current store server-side before creating a product. A future variant endpoint resolves a same-store parent product server-side and supplies it as serializer context. Read representations expose the variant's parent identifier for relationship display, not as permission authority.
+
 ## Deferred rules
 
 **[DECISION REQUIRED] D-08 / ERD-03:** SKU scope/uniqueness, variant attribute structure, product archive/delete policy beyond the current active flag, variant/stock-unit mapping, and whether/how a product can change `has_variants` after inventory or order history exists.
