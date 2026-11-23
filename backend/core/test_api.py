@@ -43,10 +43,11 @@ class ApiBaselineTests(SimpleTestCase):
         self.assertEqual(response.data["error"]["code"], "not_found")
         self.assertIn("detail", response.data["error"]["details"])
 
-    def test_default_permission_denies_anonymous(self):
+    def test_default_permission_requires_token_authentication(self):
         response = APIView.as_view()(APIRequestFactory().get("/fixture"))
-        self.assertEqual(response.status_code, 403)
-        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["error"]["code"], "not_authenticated")
+        self.assertEqual(response["WWW-Authenticate"], "Token")
 
     def test_preserves_retry_header_and_does_not_expose_unhandled_error(self):
         response = exception_handler(Throttled(wait=5), {})

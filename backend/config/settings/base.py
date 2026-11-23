@@ -16,18 +16,31 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "apps.accounts.apps.AccountsConfig",
     "rest_framework",
+    "rest_framework.authtoken",
 ]
 AUTH_USER_MODEL = "accounts.Account"
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
+    },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    # Fail closed until the separately planned authentication foundation exists.
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
     "UNAUTHENTICATED_USER": None,
     "EXCEPTION_HANDLER": "core.api.exceptions.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "core.api.pagination.StandardPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_register": "3/hour",
+        "auth_login": "5/min",
+    },
 }
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -1,10 +1,16 @@
 # SellerOS API conventions — BACKEND-05
 
-10 October 2026. This contract defines transport conventions, not business fields/endpoints. Existing public `/health/` and `/ready/` retain their separate probe payloads. No product/order/authentication route is registered by this task. Existing DRF direct-success and error-envelope behavior is preserved.
+10 October 2026, updated for AUTH-01. This contract defines transport conventions, not business fields/endpoints. Existing public `/health/` and `/ready/` retain their separate probe payloads. AUTH-01 registers only account registration, token login, and current-account validation routes; no product or order route exists. Existing direct-success and error-envelope behavior is preserved.
 
 ## Version and naming
 
-Future business APIs use `/api/v1/`, trailing slash, lowercase plural resource nouns, and opaque string representations of IDs. Example future paths `/api/v1/products/` and `/api/v1/orders/{id}/` are planned names, not live endpoints. GET lists/details, POST creation (201), PATCH partial update (200), and DELETE only where an approved policy permits it (204, no body). Explicit lifecycle actions may use POST under the resource after rules are approved; never replace order transitions with arbitrary PATCH. No deletion/archival/business rule is selected here. Auth route names/transport await AUTH tasks. Breaking contract changes require a new version or explicit migration agreement.
+Future business APIs use `/api/v1/`, trailing slash, lowercase plural resource nouns, and opaque string representations of IDs. Example future paths `/api/v1/products/` and `/api/v1/orders/{id}/` are planned names, not live endpoints. GET lists/details, POST creation (201), PATCH partial update (200), and DELETE only where an approved policy permits it (204, no body). Explicit lifecycle actions may use POST under the resource after rules are approved; never replace order transitions with arbitrary PATCH. No deletion/archival/business rule is selected here. Breaking contract changes require a new version or explicit migration agreement.
+
+## AUTH-01 authentication routes
+
+`POST /api/v1/auth/register/` and `POST /api/v1/auth/login/` are public JSON-only endpoints. Successful responses directly return `{"account":{"id":"<opaque UUID>","email":"..."},"token":"<opaque bearer token>"}` with 201 or 200 respectively. `GET /api/v1/auth/me/` requires `Authorization: Token <token>` and directly returns `{"id":"<opaque UUID>","email":"..."}`. These endpoints do not create stores or confer store access.
+
+Auth validation errors use the established envelope. Duplicate registration is 400/`validation_error`; unknown email, wrong password, and inactive account are 401/`authentication_failed` with the same generic detail; missing token on `/me/` is 401/`not_authenticated`. AUTH-01's IP/cache-backed limits are registration 3/hour and login 5/minute; see [authentication setup](setup/authentication.md) for validation and token-lifecycle boundaries.
 
 ## Success and pagination
 
@@ -39,7 +45,7 @@ Stable required fields: error object, string code, details containing nested str
 | 415 | unsupported_media_type | detail string |
 | 429 | throttled | detail string; Retry-After preserved |
 
-Authentication classes remain empty/fail-closed, so current anonymous DRF access returns 403/not_authenticated; this does not select future login/session/token behavior. Authenticated same-store permissions are future AUTH work. Future scoped object lookup returns 404 for inaccessible foreign IDs rather than disclosing existence; actual permission failure on an authorized context is 403. Existing handler preserves status and protocol headers.
+Token authentication is now the global DRF authentication class. Public registration/login views explicitly opt out of token parsing; other protected DRF views return 401/`not_authenticated` with `WWW-Authenticate: Token` when no valid token is supplied. Authenticated same-store permissions are future authorization work. Future scoped object lookup returns 404 for inaccessible foreign IDs rather than disclosing existence; actual permission failure on an authorized context is 403. Existing handler preserves status and protocol headers.
 
 The envelope applies to DRF-handled exceptions only. Resolver 404, middleware errors and unexpected 500s may have non-JSON bodies today; clients must handle non-JSON failure safely. Never display raw HTML/trace output. Unknown failures are not serialized from exception text. Do not place secrets/private inputs in validation messages. Wider global failure wrapping is not implemented by this task.
 
