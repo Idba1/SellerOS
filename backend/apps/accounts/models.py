@@ -99,6 +99,14 @@ class Store(UUIDTimeStampedModel):
     timezone = models.CharField(max_length=64, default="Asia/Dhaka")
     currency_code = models.CharField(max_length=3, default="BDT")
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(currency_code="BDT"),
+                name="accounts_store_currency_bdt",
+            )
+        ]
+
     def __str__(self) -> str:
         return self.name
 
