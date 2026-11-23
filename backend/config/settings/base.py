@@ -1,4 +1,4 @@
-"""Shared skeleton settings; database and business timezone remain unconfigured."""
+"""Shared Django settings with validated PostgreSQL configuration."""
 import os
 from pathlib import Path
 

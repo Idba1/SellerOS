@@ -33,8 +33,13 @@ Django creates the named test database, runs test setup, and destroys it afterwa
 
 ## Observed verification and limitation
 
-Initial clean branch backend. Inspected settings/test settings, requirements and existing probe tests; private env inspection printed only configured/missing flags. All DB fields were blank. Service inspection was denied by sandbox permissions; no service-state claim is made. Sandbox registry DNS failed; approved elevated driver installation succeeded: psycopg/binary 3.3.6 and typing_extensions 4.16.0. pip check passed.
+The earlier configuration-only record used synthetic values and did not claim a live database connection. On 23 November 2026, local development configuration was loaded without displaying values and verification completed against the configured PostgreSQL instance:
 
-An inline Python subprocess exported synthetic configuration values (not real connection credentials), set writable TEMP/TMP, ran `manage.py check --settings=config.settings.test` and the selected database-free labels `core.tests core.test_settings core.test_environment core.test_api core.test_health core.test_database.DatabaseConfigurationTests`: **20 tests passed**. Health's unconfigured path is now explicitly mocked so it does not assume global DATABASES is empty. New validation tests cover backend identity/timeouts, sanitized missing config and unsafe name/port/timeout rejection.
+- `manage.py check --settings=config.settings.local`: no issues.
+- Django shell `SELECT 1`: returned `(1,)` and printed only `PostgreSQL connection OK`.
+- `manage.py migrate --plan`: no planned operations.
+- `manage.py migrate --check`: exited successfully, confirming no pending migrations.
+- `PostgreSQLSmokeTests`: Django created the configured disposable test database, verified PostgreSQL and `SELECT 1`, then destroyed it. One test passed.
+- `python -m pip check`: no broken requirements.
 
-**BLOCKED — live verification:** user has been asked to configure local credentials. No live connection/migration/test-database pass is claimed. PostgreSQLSmokeTests is written but not run. Do not mark BACKEND-04 acceptance complete until those checks pass against provisioned PostgreSQL. No business decision is changed; no keys printed, real data used, database provisioned or commit made. BACKEND-05 waits for this prerequisite's live checks.
+No credentials, database names, customer data or provider data were printed. The test database run uses Django's normal lifecycle and does not use `--noinput`. No business models or feature migrations exist yet, so migration verification proves connectivity and migration state only; it does not prove store isolation, business-schema integrity or production deployment readiness. SSL/remote deployment policy remains a later environment decision.
