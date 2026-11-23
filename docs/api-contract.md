@@ -22,6 +22,12 @@ An owner cannot create a second store (400/`validation_error`); any staff member
 
 Every future store-owned list, detail, mutation, count, filter, and aggregation must begin with the server-resolved store context and a store-scoped queryset. No client-supplied store/owner/role field can select a tenant. The existing `GET /api/v1/stores/current/` route accepts no query parameters; an attempted `store_id` selector receives 400/`validation_error`, not another store's profile. See [store permission setup](setup/store-permissions.md).
 
+## PRODUCT-03 catalogue reads
+
+`GET /api/v1/products/` and `GET /api/v1/products/{id}/` require token authentication and resolve the current owner/active-staff store server-side. The list is paginated with the standard envelope and returns only the current store's products. It accepts one each of `page`, `page_size`, `category`, `is_active`, and `ordering`; no `store_id` or owner selector is accepted. `category` is a non-blank case-insensitive exact match, `is_active` is `true` or `false` (case-insensitive), and `ordering` is one of `name`, `-name`, `created_at`, or `-created_at`. The default is case-insensitive name ascending followed by UUID ascending; every allowed ordering has UUID as a deterministic tie-breaker.
+
+List rows serialize product catalogue fields only. Detail reads use the same scope, include only that product's variants, and accept no query parameters. A missing or foreign `{id}` has the same 404/`not_found` contract and discloses no product content. No product/variant creation, editing, stock, archive/delete, or variant route is introduced by PRODUCT-03.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:

@@ -115,6 +115,16 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ProductDetailSerializer(ProductSerializer):
+    """A product read with only its own store-inherited variants."""
+
+    variants = ProductVariantSerializer(many=True, read_only=True)
+
+    class Meta(ProductSerializer.Meta):
+        fields = ProductSerializer.Meta.fields + ("variants",)
+        read_only_fields = fields
+
+
 class ProductVariantWriteSerializer(StrictPayloadModelSerializer):
     """Validate named variants against a server-resolved variant-based product."""
 
