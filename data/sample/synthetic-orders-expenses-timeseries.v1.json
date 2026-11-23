@@ -1,0 +1,241 @@
+{
+  "fixture_id": "selleros-synthetic-orders-expenses-timeseries-v1",
+  "fixture_revision": 1,
+  "provenance": "synthetic",
+  "label": "SYNTHETIC DATA — NOT SELLER PERFORMANCE",
+  "determinism": "Hand-authored fixed manifest; fixture_revision identifies this exact repeatable set.",
+  "schema_status": "Manifest only. SalesOrder, OrderItem, Expense, inventory, and analytics models/APIs are not implemented yet.",
+  "catalog_fixture_id": "selleros-synthetic-catalog-customers-v1",
+  "currency_code": "BDT",
+  "order_cases": [
+    {
+      "fixture_key": "order-a-delivered-normal",
+      "store_key": "synthetic-store-a",
+      "customer_key": "customer-a-repeat",
+      "lines": [
+        {
+          "product_key": "product-a-tote",
+          "variant_key": null,
+          "quantity": 2,
+          "selling_price_snapshot": "850.00",
+          "unit_cost_snapshot": "430.00"
+        }
+      ],
+      "order_discount": "0.00",
+      "seller_delivery_cost": "90.00",
+      "status_events": [
+        {"status": "CONFIRMED", "occurred_at": "2026-01-05T09:30:00+06:00"},
+        {"status": "PROCESSING", "occurred_at": "2026-01-05T13:15:00+06:00"},
+        {"status": "SHIPPED", "occurred_at": "2026-01-06T10:00:00+06:00"},
+        {"status": "DELIVERED", "occurred_at": "2026-01-07T16:20:00+06:00"}
+      ],
+      "reconciliation": {
+        "order_gross": "1700.00",
+        "order_discount": "0.00",
+        "net_before_reversal": "1700.00",
+        "completed_sale_net_after_reversal": "1700.00",
+        "completed_sale_cogs_after_reversal": "860.00",
+        "stock_deducted_units": 2,
+        "stock_restored_units": 0,
+        "cost_completeness": "COMPLETE"
+      }
+    },
+    {
+      "fixture_key": "order-a-delivered-missing-cost",
+      "store_key": "synthetic-store-a",
+      "customer_key": "customer-a-sparse",
+      "lines": [
+        {
+          "product_key": "product-a-pouch",
+          "variant_key": null,
+          "quantity": 1,
+          "selling_price_snapshot": "390.00",
+          "unit_cost_snapshot": null
+        }
+      ],
+      "order_discount": "0.00",
+      "seller_delivery_cost": null,
+      "status_events": [
+        {"status": "CONFIRMED", "occurred_at": "2026-02-03T11:00:00+06:00"},
+        {"status": "PROCESSING", "occurred_at": "2026-02-03T15:00:00+06:00"},
+        {"status": "SHIPPED", "occurred_at": "2026-02-04T09:45:00+06:00"},
+        {"status": "DELIVERED", "occurred_at": "2026-02-06T14:10:00+06:00"}
+      ],
+      "reconciliation": {
+        "order_gross": "390.00",
+        "order_discount": "0.00",
+        "net_before_reversal": "390.00",
+        "completed_sale_net_after_reversal": "390.00",
+        "completed_sale_cogs_after_reversal": null,
+        "stock_deducted_units": 1,
+        "stock_restored_units": 0,
+        "cost_completeness": "INCOMPLETE_MISSING_UNIT_COST"
+      }
+    },
+    {
+      "fixture_key": "order-a-confirmed-cancelled",
+      "store_key": "synthetic-store-a",
+      "customer_key": "customer-a-new",
+      "lines": [
+        {
+          "product_key": "product-a-tote",
+          "variant_key": null,
+          "quantity": 1,
+          "selling_price_snapshot": "850.00",
+          "unit_cost_snapshot": "430.00"
+        }
+      ],
+      "order_discount": "0.00",
+      "seller_delivery_cost": null,
+      "status_events": [
+        {"status": "CONFIRMED", "occurred_at": "2026-02-20T10:20:00+06:00"},
+        {"status": "CANCELLED", "occurred_at": "2026-02-20T12:05:00+06:00"}
+      ],
+      "reconciliation": {
+        "order_gross": "850.00",
+        "order_discount": "0.00",
+        "net_before_reversal": "0.00",
+        "completed_sale_net_after_reversal": "0.00",
+        "completed_sale_cogs_after_reversal": "0.00",
+        "stock_deducted_units": 1,
+        "stock_restored_units": 1,
+        "cost_completeness": "NOT_APPLICABLE_NO_COMPLETED_SALE"
+      }
+    },
+    {
+      "fixture_key": "order-a-delivered-returned",
+      "store_key": "synthetic-store-a",
+      "customer_key": "customer-a-repeat",
+      "lines": [
+        {
+          "product_key": "product-a-organizer",
+          "variant_key": "variant-a-organizer-sky",
+          "quantity": 1,
+          "selling_price_snapshot": "1200.00",
+          "unit_cost_snapshot": "690.00"
+        }
+      ],
+      "order_discount": "0.00",
+      "seller_delivery_cost": "110.00",
+      "status_events": [
+        {"status": "CONFIRMED", "occurred_at": "2026-03-02T09:00:00+06:00"},
+        {"status": "PROCESSING", "occurred_at": "2026-03-02T11:30:00+06:00"},
+        {"status": "SHIPPED", "occurred_at": "2026-03-03T08:40:00+06:00"},
+        {"status": "DELIVERED", "occurred_at": "2026-03-04T15:10:00+06:00"},
+        {"status": "RETURN_REQUESTED", "occurred_at": "2026-03-07T10:00:00+06:00"},
+        {"status": "RETURNED", "occurred_at": "2026-03-10T13:25:00+06:00"}
+      ],
+      "reconciliation": {
+        "order_gross": "1200.00",
+        "order_discount": "0.00",
+        "net_before_reversal": "1200.00",
+        "completed_sale_net_after_reversal": "0.00",
+        "completed_sale_cogs_after_reversal": "0.00",
+        "stock_deducted_units": 1,
+        "stock_restored_units": 1,
+        "cost_completeness": "COMPLETE_REVERSED_ON_ACCEPTED_RETURN"
+      }
+    },
+    {
+      "fixture_key": "order-b-delivered-sparse",
+      "store_key": "synthetic-store-b",
+      "customer_key": "customer-b-repeat",
+      "lines": [
+        {
+          "product_key": "product-b-cup",
+          "variant_key": "variant-b-cup-dawn",
+          "quantity": 1,
+          "selling_price_snapshot": "760.00",
+          "unit_cost_snapshot": "380.00"
+        }
+      ],
+      "order_discount": "0.00",
+      "seller_delivery_cost": "0.00",
+      "status_events": [
+        {"status": "CONFIRMED", "occurred_at": "2025-10-01T10:00:00+06:00"},
+        {"status": "PROCESSING", "occurred_at": "2025-10-01T14:00:00+06:00"},
+        {"status": "SHIPPED", "occurred_at": "2025-10-02T09:15:00+06:00"},
+        {"status": "DELIVERED", "occurred_at": "2025-10-04T16:00:00+06:00"}
+      ],
+      "reconciliation": {
+        "order_gross": "760.00",
+        "order_discount": "0.00",
+        "net_before_reversal": "760.00",
+        "completed_sale_net_after_reversal": "760.00",
+        "completed_sale_cogs_after_reversal": "380.00",
+        "stock_deducted_units": 1,
+        "stock_restored_units": 0,
+        "cost_completeness": "COMPLETE"
+      }
+    }
+  ],
+  "expense_records": [
+    {
+      "fixture_key": "expense-a-market-table",
+      "store_key": "synthetic-store-a",
+      "description": "Synthetic market-table fee",
+      "amount": "250.00",
+      "incurred_on": "2026-01-03"
+    },
+    {
+      "fixture_key": "expense-a-packaging",
+      "store_key": "synthetic-store-a",
+      "description": "Synthetic packaging batch",
+      "amount": "120.00",
+      "incurred_on": "2026-03-01"
+    },
+    {
+      "fixture_key": "expense-b-display",
+      "store_key": "synthetic-store-b",
+      "description": "Synthetic display fee",
+      "amount": "150.00",
+      "incurred_on": "2025-10-01"
+    }
+  ],
+  "chronological_series_stubs": [
+    {
+      "fixture_key": "series-a-delivery-001",
+      "store_key": "synthetic-store-a",
+      "source_order_key": "order-a-delivered-normal",
+      "source_status": "DELIVERED",
+      "product_key": "product-a-tote",
+      "occurred_at": "2026-01-07T16:20:00+06:00",
+      "units": 2
+    },
+    {
+      "fixture_key": "series-a-delivery-002",
+      "store_key": "synthetic-store-a",
+      "source_order_key": "order-a-delivered-missing-cost",
+      "source_status": "DELIVERED",
+      "product_key": "product-a-pouch",
+      "occurred_at": "2026-02-06T14:10:00+06:00",
+      "units": 1
+    },
+    {
+      "fixture_key": "series-a-return-001",
+      "store_key": "synthetic-store-a",
+      "source_order_key": "order-a-delivered-returned",
+      "source_status": "RETURNED",
+      "product_key": "product-a-organizer",
+      "occurred_at": "2026-03-10T13:25:00+06:00",
+      "units": 1
+    },
+    {
+      "fixture_key": "series-b-delivery-001",
+      "store_key": "synthetic-store-b",
+      "source_order_key": "order-b-delivered-sparse",
+      "source_status": "DELIVERED",
+      "product_key": "product-b-cup",
+      "occurred_at": "2025-10-04T16:00:00+06:00",
+      "units": 1
+    }
+  ],
+  "boundaries": [
+    "All discounts are exactly 0.00; no unapproved Decimal rounding or discount allocation rule is selected.",
+    "No REFUNDED case is included because cancellation-refund and non-merchandise refund rules remain unresolved.",
+    "Chronological series stubs are event references, not forecast buckets, demand estimates, or date-grouped analytics output.",
+    "Return handling records the approved accepted-return reversal once; return-period reporting and forecast return treatment remain unresolved.",
+    "Expense records are general expenses and are never allocated to orders/products; no profit total is asserted.",
+    "All relations are fixture keys and must become server-authorized database relations only in a later approved seed task."
+  ]
+}
