@@ -15,6 +15,7 @@ if SECRET_KEY.strip() == "REPLACE_ME":
 INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "apps.accounts.apps.AccountsConfig",
+    "apps.catalog.apps.CatalogConfig",
     "rest_framework",
     "rest_framework.authtoken",
 ]
