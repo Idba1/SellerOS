@@ -78,6 +78,21 @@ Unit runner uses existing TypeScript and Node test tooling, compiles into a disp
 
 Verification: `npm run typecheck --prefix frontend` passed; `npm run build --prefix frontend` passed (32 modules); bundled-Playwright `node frontend/tests/shell-smoke.cjs` passed all 13 routes, title/current-page, topbar/profile/cards, keyboard skip/navigation, 404 recovery, 375px/1280px overflow and console checks. Screenshot visual review confirmed desktop alignment and restrained styling. Build/browser used elevated execution for known sandbox restrictions. `git diff --check` passed. No lint script exists. Backend, API client, dependencies and route register unchanged. Pages remain explicitly marked placeholders; authentication and business screens remain later work.
 
+## Reusable form and status primitives — FRONTEND-03 (23 November 2026)
+
+`src/components/FormFields.tsx` provides `TextField` and `SelectField`. Both connect visible labels, optional help text and validation errors with stable IDs and `aria-describedby`; an error also sets `aria-invalid` and announces the message. `ConfirmationDialog.tsx` uses the native modal dialog: cancellation receives initial focus, Escape calls the supplied cancellation handler, and confirmation/cancellation do not imply any business mutation. `StatusStates.tsx` provides loading, empty and error feedback with optional caller-owned actions.
+
+The components are presentational primitives only. Callers own field validation, request lifecycle, destructive-action policy, submission and API error mapping. In particular, they do not select order/refund rules, authorize a store action or interpret server responses beyond the existing API client contract.
+
+Browser component verification is isolated in `tests/form-fixture.html` and `tests/form-fixture.tsx`; it is not an app route or a product feature. Run it with the already installed Edge/Playwright environment:
+
+```powershell
+$env:NODE_PATH = 'C:\Users\User\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules'
+node frontend/tests/form-primitives.cjs
+```
+
+On 23 November 2026, it passed label/help/error wiring, invalid-field feedback, keyboard focus order, Enter/Escape dialog behavior, and keyboard retry activation. `npm run typecheck --prefix frontend`, `node frontend/tests/run-api-tests.cjs`, `npm run build --prefix frontend`, `node frontend/tests/form-primitives.cjs` and the existing `node frontend/tests/shell-smoke.cjs` were run. No dependencies, endpoints, API contracts or business screens were added. The next dependency is a feature CRUD task with an approved resource schema and authorization rules.
+
 ## Dashboard overview — FRONTEND-UI-02 (14 October 2026)
 
 Inspected clean frontend branch at ecbfff4, shared shell/design components, manifests/API types, BACKEND-05 contract and backend URLs. Only health/readiness endpoints exist; there is no approved live dashboard/resource response schema. Dashboard therefore performs no API calls and imports no API client. Every section is explicitly synthetic/demo-only.
