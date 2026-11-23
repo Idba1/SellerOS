@@ -1,3 +1,9 @@
-# Sample data
+# Sample synthetic data
 
-Reserved for reviewed synthetic demo/test fixtures under the [approved data policy](../../docs/decisions/data-and-provider.md). No dataset is generated in SETUP-02. Later DATA tasks must document provenance, reproducibility and limitations; do not place real customer data, credentials or provider keys here.
+This directory contains reviewed, static fixtures only. It is not an import source, production dataset, database dump, or automatic seed mechanism.
+
+- [Synthetic catalog and customer manifest](synthetic-catalog-customers.v1.json) is fully fictional, repeatable, and labeled `SYNTHETIC DATA — NOT SELLER PERFORMANCE`.
+- It provides product/variant and customer-history **fixture references** for future approved product/customer/order work. The Product, ProductVariant, Customer, and SalesOrder models/API routes do not exist yet, so this manifest must not be loaded into the current database.
+- All customer contact fields are null. Do not add real customer records, credentials, provider keys, addresses, payment details, or production exports.
+
+Follow the [synthetic data policy](../../docs/test-data-policy.md) before adding or loading any fixture.

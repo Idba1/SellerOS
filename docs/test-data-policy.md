@@ -40,7 +40,7 @@ Do not label a live API response as synthetic unless its underlying database was
 
 The only existing synthetic record builders are the deterministic account/store factories in `backend/tests/factories/`. Django tests create a disposable PostgreSQL test database, apply migrations, and destroy that database after the test run. This is the only approved reset mechanism today.
 
-There is no application demo seed command, checked-in dataset, production import path, or persistent demo database. `data/sample/` contains documentation only. No task may treat an empty directory or a placeholder as authorization to load records.
+There is no application demo seed command, production import path, or persistent demo database. `data/sample/` contains the reviewed static DATA-02 synthetic catalog/customer manifest and its README, but the manifest is not database-loaded and is not an API data source. No task may treat a fixture file as authorization to load records.
 
 ### Future seed-command design (not implemented)
 

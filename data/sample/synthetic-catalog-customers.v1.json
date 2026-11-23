@@ -1,0 +1,188 @@
+{
+  "fixture_id": "selleros-synthetic-catalog-customers-v1",
+  "fixture_revision": 1,
+  "provenance": "synthetic",
+  "label": "SYNTHETIC DATA — NOT SELLER PERFORMANCE",
+  "determinism": "Hand-authored fixed manifest; fixture_revision identifies this exact repeatable set.",
+  "schema_status": "Manifest only. Product, ProductVariant, Customer, and sales-order models/APIs are not implemented yet.",
+  "currency_code": "BDT",
+  "stores": [
+    {
+      "fixture_key": "synthetic-store-a",
+      "name": "Synthetic Store A — Canvas & Carry"
+    },
+    {
+      "fixture_key": "synthetic-store-b",
+      "name": "Synthetic Store B — Everyday Orbit"
+    }
+  ],
+  "products": [
+    {
+      "fixture_key": "product-a-tote",
+      "store_key": "synthetic-store-a",
+      "name": "Harbor Canvas Tote",
+      "category": "Carry goods",
+      "selling_price": "850.00",
+      "unit_cost": "430.00",
+      "has_variants": false,
+      "is_active": true,
+      "variants": []
+    },
+    {
+      "fixture_key": "product-a-pouch",
+      "store_key": "synthetic-store-a",
+      "name": "Pocket Day Pouch",
+      "category": "Carry goods",
+      "selling_price": "390.00",
+      "unit_cost": null,
+      "has_variants": false,
+      "is_active": true,
+      "variants": []
+    },
+    {
+      "fixture_key": "product-a-organizer",
+      "store_key": "synthetic-store-a",
+      "name": "Folded Desk Organizer",
+      "category": "Workspace",
+      "selling_price": "1200.00",
+      "unit_cost": "690.00",
+      "has_variants": true,
+      "is_active": true,
+      "variants": [
+        {
+          "fixture_key": "variant-a-organizer-sky",
+          "name": "Sky",
+          "is_active": true
+        },
+        {
+          "fixture_key": "variant-a-organizer-sand",
+          "name": "Sand",
+          "is_active": true
+        }
+      ]
+    },
+    {
+      "fixture_key": "product-a-archive",
+      "store_key": "synthetic-store-a",
+      "name": "Archive Cable Wrap",
+      "category": "Workspace",
+      "selling_price": "180.00",
+      "unit_cost": "70.00",
+      "has_variants": false,
+      "is_active": false,
+      "variants": []
+    },
+    {
+      "fixture_key": "product-b-cup",
+      "store_key": "synthetic-store-b",
+      "name": "Orbit Travel Cup",
+      "category": "Drinkware",
+      "selling_price": "760.00",
+      "unit_cost": "380.00",
+      "has_variants": true,
+      "is_active": true,
+      "variants": [
+        {
+          "fixture_key": "variant-b-cup-dawn",
+          "name": "Dawn",
+          "is_active": true
+        },
+        {
+          "fixture_key": "variant-b-cup-dusk",
+          "name": "Dusk",
+          "is_active": true
+        }
+      ]
+    }
+  ],
+  "customers": [
+    {
+      "fixture_key": "customer-a-new",
+      "store_key": "synthetic-store-a",
+      "display_name": "Synthetic Customer A-001",
+      "email": null,
+      "phone": null,
+      "history_case": "no_purchase_history"
+    },
+    {
+      "fixture_key": "customer-a-repeat",
+      "store_key": "synthetic-store-a",
+      "display_name": "Synthetic Customer A-002",
+      "email": null,
+      "phone": null,
+      "history_case": "repeat_purchase_history"
+    },
+    {
+      "fixture_key": "customer-a-sparse",
+      "store_key": "synthetic-store-a",
+      "display_name": "Synthetic Customer A-003",
+      "email": null,
+      "phone": null,
+      "history_case": "sparse_purchase_history"
+    },
+    {
+      "fixture_key": "customer-b-repeat",
+      "store_key": "synthetic-store-b",
+      "display_name": "Synthetic Customer B-001",
+      "email": null,
+      "phone": null,
+      "history_case": "repeat_purchase_history"
+    }
+  ],
+  "customer_history_stubs": [
+    {
+      "fixture_key": "history-a-repeat-001",
+      "customer_key": "customer-a-repeat",
+      "product_key": "product-a-tote",
+      "occurred_on": "2026-01-07",
+      "quantity": 1,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    },
+    {
+      "fixture_key": "history-a-repeat-002",
+      "customer_key": "customer-a-repeat",
+      "product_key": "product-a-organizer",
+      "occurred_on": "2026-02-11",
+      "quantity": 1,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    },
+    {
+      "fixture_key": "history-a-repeat-003",
+      "customer_key": "customer-a-repeat",
+      "product_key": "product-a-tote",
+      "occurred_on": "2026-03-19",
+      "quantity": 2,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    },
+    {
+      "fixture_key": "history-a-sparse-001",
+      "customer_key": "customer-a-sparse",
+      "product_key": "product-a-pouch",
+      "occurred_on": "2025-10-02",
+      "quantity": 1,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    },
+    {
+      "fixture_key": "history-b-repeat-001",
+      "customer_key": "customer-b-repeat",
+      "product_key": "product-b-cup",
+      "occurred_on": "2026-01-14",
+      "quantity": 1,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    },
+    {
+      "fixture_key": "history-b-repeat-002",
+      "customer_key": "customer-b-repeat",
+      "product_key": "product-b-cup",
+      "occurred_on": "2026-02-28",
+      "quantity": 1,
+      "kind": "SYNTHETIC_PURCHASE_HISTORY_STUB"
+    }
+  ],
+  "boundaries": [
+    "History stubs are fixture references only, not SalesOrder records or approved revenue/profit/forecast/segmentation outputs.",
+    "No order status, return/refund treatment, discounts, delivery cost, stock movement, or analytics threshold is implied.",
+    "Contact fields are deliberately null; no real contact details, address, payment detail, credential, or provider key is present.",
+    "All store links are fixture keys and must be replaced by server-authorized database relations in a future approved seed task."
+  ]
+}
