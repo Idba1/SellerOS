@@ -14,6 +14,8 @@ The completed-sale date is the original `OrderStatusEvent` whose `to_status` is 
 
 For a future date-range request, a delivered event belongs to a selected local calendar date when its converted local date equals that date. The hand-calculable examples below treat their written calendar ranges as inclusive; this is not a selected production query-boundary rule. No dashboard/API range parameter is introduced by this task.
 
+ANALYTICS-02's internal service instead accepts caller-supplied timezone-aware timestamps using a half-open interval, `period_start <= delivered_event < period_end`. It requires the caller to resolve the authorized store and translate any future local-date selection before aggregation. This is an internal deterministic boundary, not a dashboard date-picker, default-range, or bucket-selection decision.
+
 **[DECISION REQUIRED] DR-07:** exact timestamp boundary format, default dashboard range, bucket size (day/week/month), and return/reversal-period policy are not approved. A future implementation must carry the requested local date range, store timezone, cutoff/as-of time, and selected grouping in its response; it must not substitute UTC dates or the viewer's browser timezone.
 
 ## 3. Eligible records and status treatment
@@ -83,6 +85,6 @@ The missing-cost example is valid for sales totals but not evidence of complete 
 
 ## 8. Verification and implementation gate
 
-`backend/tests/test_metrics_contract.py` recomputes the first example from the reviewed manifest and verifies the BDT 2,090.00 / 3-unit result. It also checks that this document preserves delivery-event, timezone, return, incomplete-period, and decision-required disclosures.
+`backend/tests/test_metrics_contract.py` recomputes the first example from the reviewed manifest and verifies the BDT 2,090.00 / 3-unit result. `backend/apps/analytics/tests/test_sales.py` verifies service totals, product gross summaries, same-store scope, historical delivery evidence, empty output, invalid periods, and duplicate-delivery rejection. It also checks that this document preserves delivery-event, timezone, return, incomplete-period, and decision-required disclosures.
 
-No analytics model, endpoint, query, cache, dashboard widget, or frontend fixture is created by ANALYTICS-01. Before ANALYTICS-02 implements a calculation, it must resolve or explicitly preserve the listed return/date/rounding gates and prove same-store isolation, event-history correctness, empty-versus-incomplete behavior, and hand-calculated examples.
+No analytics model, endpoint, cache, dashboard widget, or frontend fixture is created by ANALYTICS-01. ANALYTICS-02 adds only an internal base-sales query service; before any public dashboard/API calculation is released, it must preserve the listed return/date/rounding gates and prove same-store isolation, event-history correctness, empty-versus-incomplete behavior, and hand-calculated examples.
