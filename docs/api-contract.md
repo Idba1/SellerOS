@@ -30,6 +30,14 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 `POST /api/v1/products/` creates a product for the server-resolved current owner/active-staff store and returns the direct serialized resource with 201. `PATCH /api/v1/products/{id}/` partially updates only a same-store product and returns it with 200. Both write routes accept the strict product write fields `name`, `category`, `selling_price`, `unit_cost`, `has_variants`, and `is_active`; `store_id`, ownership fields, and unknown fields return 400/`validation_error`. Setting `is_active` to false deactivates a product. There is no hard-delete route. An API update cannot set `has_variants` false while variant rows still exist; it must preserve a consistent variant-based representation until a separately approved lifecycle operation exists. No variant write, stock, archive/delete route is introduced.
 
+## INV-03 inventory reads and manual adjustment
+
+`GET /api/v1/inventory/` requires token authentication, resolves the current owner/active-staff store server-side, and returns a standard paginated list of that store's stock units. It accepts only `page` and `page_size`, ordered by case-insensitive product name then stock-unit UUID. Each row includes `id`, product/optional variant IDs and names, `quantity_on_hand`, nullable `low_stock_threshold`, `is_low_stock`, and `updated_at`. It never includes a store selector or records from another store.
+
+`GET /api/v1/inventory/{stock_unit_id}/movements/` accepts only pagination parameters and returns the selected same-store stock unit's movement history, newest first with UUID as the tie-breaker. Rows include the movement ID, stock-unit ID, type, signed quantity delta, nullable reason, creating account ID, nullable reversal ID, and occurrence timestamp. A missing or foreign stock-unit ID returns the same 404/`not_found` response and discloses no stock or movement content.
+
+`POST /api/v1/inventory/{stock_unit_id}/adjustments/` accepts exactly `quantity_delta` (a nonzero whole-unit signed delta) and non-blank `reason`. The server selects `MANUAL_ADJUSTMENT`, the authenticated creator, store, and operation ID; client-supplied ownership, movement type, reversal, or operation fields are rejected as 400/`validation_error`. The route calls the atomic inventory service, returning the created movement directly with 201. An adjustment that would make stock negative returns 400/`validation_error` and changes neither the cached quantity nor movement history. INV-03 creates no endpoint for opening balances, order deductions/restorations, threshold editing, or direct quantity updates.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:
