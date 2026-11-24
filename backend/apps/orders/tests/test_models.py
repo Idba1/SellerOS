@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from apps.catalog.models import Product
+from apps.catalog.models import Product, ProductVariant
 from apps.customers.models import Customer
 from apps.orders.models import OrderItem, SalesOrder
 from tests.factories import FactoryContext, create_store_graph
@@ -73,3 +73,78 @@ class SalesOrderModelTests(TestCase):
                 quantity=1,
                 selling_price_snapshot=Decimal("100.00"),
             )
+
+    def test_item_snapshots_survive_later_catalogue_changes(self):
+        order = self.create_order()
+        item = OrderItem.objects.create(
+            order=order,
+            product=self.product_a,
+            product_name_snapshot="Original Snapshot Name",
+            quantity=2,
+            selling_price_snapshot=Decimal("100.00"),
+            unit_cost_snapshot=Decimal("20.00"),
+        )
+
+        self.product_a.name = "Changed Catalogue Name"
+        self.product_a.selling_price = Decimal("999.00")
+        self.product_a.unit_cost = Decimal("888.00")
+        self.product_a.save()
+        item.refresh_from_db()
+
+        self.assertEqual(item.product_name_snapshot, "Original Snapshot Name")
+        self.assertEqual(item.selling_price_snapshot, Decimal("100.00"))
+        self.assertEqual(item.unit_cost_snapshot, Decimal("20.00"))
+
+    def test_item_validates_variant_and_transaction_value_boundaries(self):
+        order = self.create_order()
+        variant_product = Product.objects.create(
+            store=self.graph_a.store,
+            name="Variant Product",
+            selling_price=Decimal("120.00"),
+            unit_cost=Decimal("30.00"),
+            has_variants=True,
+        )
+        variant = ProductVariant.objects.create(product=variant_product, name="Blue")
+        item = OrderItem.objects.create(
+            order=order,
+            product=variant_product,
+            variant=variant,
+            product_name_snapshot="Variant Product",
+            variant_name_snapshot="Blue",
+            quantity=1,
+            selling_price_snapshot=Decimal("120.00"),
+            unit_cost_snapshot=None,
+        )
+        self.assertEqual(item.variant, variant)
+
+        cases = (
+            {
+                "product": self.product_a,
+                "variant": variant,
+                "product_name_snapshot": "Synthetic Product A",
+                "quantity": 1,
+                "selling_price_snapshot": Decimal("100.00"),
+            },
+            {
+                "product": self.product_a,
+                "product_name_snapshot": "Synthetic Product A",
+                "quantity": 0,
+                "selling_price_snapshot": Decimal("100.00"),
+            },
+            {
+                "product": self.product_a,
+                "product_name_snapshot": "Synthetic Product A",
+                "quantity": 1,
+                "selling_price_snapshot": Decimal("0.00"),
+            },
+            {
+                "product": self.product_a,
+                "product_name_snapshot": "Synthetic Product A",
+                "quantity": 1,
+                "selling_price_snapshot": Decimal("100.00"),
+                "unit_cost_snapshot": Decimal("-0.01"),
+            },
+        )
+        for values in cases:
+            with self.subTest(values=values), self.assertRaises(ValidationError):
+                OrderItem.objects.create(order=order, **values)
