@@ -7,6 +7,7 @@ import { Products } from '../products/Products'
 import { Orders } from '../orders/Orders'
 import { Analytics } from '../analytics/Analytics'
 import { AuthenticationPage, PasswordRecoveryUnavailable } from '../auth/AuthPage'
+import { StoreProfilePage, StoreSetupPage } from '../stores/StorePages'
 
 export function App() {
   const route = resolveRoute(window.location.pathname)
@@ -15,10 +16,12 @@ export function App() {
   if (route?.path === '/login') return <AuthenticationPage />
   if (route?.path === '/forgot-password') return <PasswordRecoveryUnavailable />
   if (route?.path === '/reset-password') return <PasswordRecoveryUnavailable reset />
+  if (route?.path === '/store/setup') return <StoreSetupPage />
   if (route?.path === '/') return <AppLayout title={title} path={route.path}><Dashboard /></AppLayout>
   if (route?.path === '/analytics') return <AppLayout title={title} path={route.path}><Analytics /></AppLayout>
   if (route?.path === '/orders') return <AppLayout title={title} path={route.path}><Orders /></AppLayout>
   if (route?.path === '/products' || route?.path === '/inventory') return <AppLayout title={title} path={route.path}><Products inventory={route.path === '/inventory'} /></AppLayout>
+  if (route?.path === '/settings') return <AppLayout title={title} path={route.path}><StoreProfilePage /></AppLayout>
   return <AppLayout title={title} path={route?.path}>
     <div className="page-heading"><div><p className="eyebrow">YOUR BUSINESS WORKSPACE</p><h1>{title}</h1><p className="page-description">{route?.description ?? 'This address does not match a SellerOS page.'}</p></div><Badge tone="accent">{route ? 'Preview' : 'Not found'}</Badge></div>
     {route ? <>

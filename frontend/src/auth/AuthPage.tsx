@@ -51,7 +51,7 @@ export function AuthenticationPage({ mode: initialMode = 'login' }: { mode?: Aut
     try {
       const session = mode === 'login' ? await login(email, password) : await register(email, password)
       saveAuthSession(session)
-      window.location.assign('/')
+      window.location.assign(mode === 'register' ? '/store/setup' : '/')
     } catch (error) {
       setSubmitError(messageFromAuthError(error))
     } finally {
