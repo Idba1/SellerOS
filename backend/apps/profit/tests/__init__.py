@@ -1,0 +1,1 @@
+"""Profit calculation service tests."""
