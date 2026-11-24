@@ -82,6 +82,12 @@ The direct response has `period`, `totals`, `completeness`, `calculation_basis`,
 
 The endpoint has no tax, payment-gateway, customer-paid-shipping, unrecorded courier/cash/shrinkage/return-shipping calculation, product profit ranking, forecast, recommendation, LLM arithmetic, or write operation. Invalid event evidence returns 400/`validation_error` without partial totals.
 
+## ASSISTANT-06 customer-reply draft request
+
+`POST /api/v1/assistant/drafts/` requires token authentication and resolves the owner's or active staff member's store only from the authenticated account. It accepts exactly `{"customer_message":"<non-blank text up to 2,000 Unicode characters>"}` with no query parameters, store selector, customer ID, source ID, sender address, or send action. Unknown body fields, blank messages, oversize messages, and duplicate/unknown query parameters return 400/`validation_error`; unauthenticated access returns 401/`not_authenticated`; missing/revoked store access is the normal safe 404/`not_found` outcome. The route is throttled to 10 requests per hour per authenticated caller and discards a local context result if it exceeds its two-second construction limit.
+
+Current PLAN-06 provider policy disables all generation, so a valid request returns 503 with `{"error":{"code":"assistant_unavailable","details":{"detail":"Assistant generation is unavailable.","state":"unavailable","warnings":["provider_execution_disabled"]}}}`. No provider, external send, retry, fallback, draft text, customer record, or raw message is accessed. The server creates one immutable same-store evaluation record with only request length, contact-redaction flag, fact/source IDs and timestamps, outcome, and warning codes. It never logs the message, prompt, generated text, credentials, customer contacts, inventory quantity, or provider error details.
+
 ## ORDER-05 order reads
 
 `GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
@@ -128,6 +134,7 @@ Stable required fields: error object, string code, details containing nested str
 | 405 | method_not_allowed | detail string; Allow header preserved |
 | 415 | unsupported_media_type | detail string |
 | 429 | throttled | detail string; Retry-After preserved |
+| 503 | assistant_unavailable | safe unavailable state and warning list; no provider detail |
 
 Token authentication is now the global DRF authentication class. Public registration/login views explicitly opt out of token parsing; other protected DRF views return 401/`not_authenticated` with `WWW-Authenticate: Token` when no valid token is supplied. Authenticated same-store permissions are future authorization work. Future scoped object lookup returns 404 for inaccessible foreign IDs rather than disclosing existence; actual permission failure on an authorized context is 403. Existing handler preserves status and protocol headers.
 

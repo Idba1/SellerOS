@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.orders.apps.OrdersConfig",
     "apps.expenses.apps.ExpensesConfig",
     "apps.analytics.apps.AnalyticsConfig",
+    "apps.assistant.apps.AssistantConfig",
     "rest_framework",
     "rest_framework.authtoken",
 ]
@@ -51,8 +52,12 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "auth_register": "3/hour",
         "auth_login": "5/min",
+        "assistant_draft": "10/hour",
     },
 }
+# Context construction performs only local, store-scoped retrieval. Exceeding
+# this bound discards the result and records a safe unavailable outcome.
+ASSISTANT_CONTEXT_BUILD_MAX_SECONDS = 2.0
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
