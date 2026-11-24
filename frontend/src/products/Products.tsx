@@ -19,7 +19,7 @@ function errorMessage(error: unknown, resource: 'products' | 'details' | 'create
 }
 function displayCategory(category: string | null) { return category || 'Uncategorized' }
 
-export function Products({ inventory = false }: { inventory?: boolean }) {
+export function Products() {
   const hasSession = Boolean(getAuthSession())
   const [filters, setFilters] = useState<Filters>(initialFilters)
   const [categoryDraft, setCategoryDraft] = useState('')
@@ -62,7 +62,6 @@ export function Products({ inventory = false }: { inventory?: boolean }) {
   }
   function changePage(page: number) { const next = { ...filters, page }; setFilters(next); void loadProducts(next) }
 
-  if (inventory) return <InventoryBoundary />
   return <>
     <div className="products-hero"><div><p className="eyebrow">CATALOGUE</p><h1>Products</h1><p className="page-description">Review and maintain the products in your authorized store catalogue.</p></div><div className="products-hero-actions"><Badge tone="accent">Live catalogue</Badge>{hasSession ? <button className="button" onClick={() => setShowCreate(true)}>Add product</button> : null}</div></div>
     {!hasSession ? <ProductsState title="Sign in to view products" description="Product records are available only to an authenticated SellerOS account." action={<a className="button" href="/login">Go to sign in</a>} /> : <>
@@ -96,8 +95,4 @@ function ProductDetails({ product, loading, error }: { product: ProductDetail | 
 
 function ProductsState({ title, description, action, loading = false }: { title: string; description: string; action?: ReactNode; loading?: boolean }) {
   return <Card className="products-state" aria-busy={loading || undefined}>{loading ? <span className="dashboard-spinner" aria-hidden="true" /> : <span className="products-state-mark" aria-hidden="true">□</span>}<h2>{title}</h2><p>{description}</p>{action ? <div>{action}</div> : null}</Card>
-}
-
-function InventoryBoundary() {
-  return <><div className="products-hero"><div><p className="eyebrow">OPERATIONS</p><h1>Inventory</h1><p className="page-description">Stock balances and movements are intentionally kept separate from catalogue records.</p></div><Badge tone="accent">Inventory API</Badge></div><Card className="products-state"><span className="products-state-mark" aria-hidden="true">□</span><h2>Inventory screen is next</h2><p>The product page does not infer stock values. Inventory will use its own authorized endpoint and movement history.</p><a className="button" href="/products">Open products</a></Card></>
 }
