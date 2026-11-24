@@ -1,6 +1,7 @@
 """Stable public serialization for base-delivered sales summaries."""
 from rest_framework import serializers
 
+from apps.analytics.services.products import ProductPerformanceSummary
 from apps.analytics.services.sales import SalesSummary
 
 
@@ -44,4 +45,28 @@ def serialize_sales_summary(summary: SalesSummary, *, store_timezone: str):
             summary.products,
             many=True,
         ).data,
+    }
+
+
+def serialize_product_performance(
+    summary: ProductPerformanceSummary,
+    *,
+    store_timezone: str,
+):
+    """Serialize comparison data without attaching unsupported profitability fields."""
+
+    return {
+        "period": {
+            "start": summary.period_start.isoformat(),
+            "end_exclusive": summary.period_end.isoformat(),
+            "store_timezone": store_timezone,
+        },
+        "result_state": (
+            "data_present"
+            if summary.products
+            else "no_eligible_events_coverage_unknown"
+        ),
+        "data_completeness_status": summary.data_completeness_status,
+        "return_adjustment_status": summary.return_adjustment_status,
+        "products": ProductSalesSummarySerializer(summary.products, many=True).data,
     }

@@ -64,6 +64,14 @@ When there are no eligible delivery events, the response has zero base totals, `
 
 **[DECISION REQUIRED]** DR-04, DR-06, DR-07, and AC-01 still govern rounding, return/refund amount, public local-date/bucket/range semantics, reversal-period attribution, retained units/orders, and AOV. This endpoint deliberately exposes only the base-delivered contract from ANALYTICS-01.
 
+## ANALYTICS-04 product performance
+
+`GET /api/v1/analytics/product-performance/` requires the same authenticated server-resolved owner/active-staff store and required timezone-aware `period_start` / `period_end` parameters as the sales-summary endpoint. The interval is `period_start <= delivery_event < period_end`; it accepts no store selector, product filter, pagination, ranking control, local-date default, or grouping parameter.
+
+The direct response contains the echoed period, `result_state`, `data_completeness_status`, `return_adjustment_status`, and `products`. Each product row has only `product_id`, `delivered_units`, and snapshot-based `delivered_gross_sales` as a BDT decimal string. It is deterministic comparison data, not a profitability ranking: it does not expose current product price/cost/name, allocated discount/net revenue, COGS, margin, profit, tax, forecasts, recommendations, or return-adjusted values. Original immutable delivery evidence determines eligibility, so a later returned/refunded current status remains visible in base results until the separate reversal contract is approved.
+
+An empty response has `products: []` and `result_state: "no_eligible_events_coverage_unknown"`; it does not claim a complete period. Invalid/missing/non-aware/repeated bounds, unknown query parameters, and duplicate delivery evidence return 400/`validation_error` without partial performance rows. **[DECISION REQUIRED]** DR-04, DR-06, DR-07, and AC-01 remain unchanged.
+
 ## ORDER-05 order reads
 
 `GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
