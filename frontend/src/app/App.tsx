@@ -9,6 +9,7 @@ import { Customers } from '../customers/Customers'
 import { Expenses } from '../expenses/Expenses'
 import { Profit } from '../profit/Profit'
 import { Assistant } from '../assistant/Assistant'
+import { Advisor } from '../advisor/Advisor'
 import { Orders } from '../orders/Orders'
 import { Analytics } from '../analytics/Analytics'
 import { AuthenticationPage, PasswordRecoveryUnavailable } from '../auth/AuthPage'
@@ -31,6 +32,7 @@ export function App() {
   if (route?.path === '/expenses') return <AppLayout title={title} path={route.path}><Expenses /></AppLayout>
   if (route?.path === '/profit') return <AppLayout title={title} path={route.path}><Profit /></AppLayout>
   if (route?.path === '/assistant') return <AppLayout title={title} path={route.path}><Assistant /></AppLayout>
+  if (route?.path === '/advisor') return <AppLayout title={title} path={route.path}><Advisor /></AppLayout>
   if (route?.path === '/settings') return <AppLayout title={title} path={route.path}><StoreProfilePage /></AppLayout>
   return <AppLayout title={title} path={route?.path}>
     <div className="page-heading"><div><p className="eyebrow">YOUR BUSINESS WORKSPACE</p><h1>{title}</h1><p className="page-description">{route?.description ?? 'This address does not match a SellerOS page.'}</p></div><Badge tone="accent">{route ? 'Preview' : 'Not found'}</Badge></div>
