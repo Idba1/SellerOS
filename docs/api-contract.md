@@ -38,6 +38,12 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 `POST /api/v1/inventory/{stock_unit_id}/adjustments/` accepts exactly `quantity_delta` (a nonzero whole-unit signed delta) and non-blank `reason`. The server selects `MANUAL_ADJUSTMENT`, the authenticated creator, store, and operation ID; client-supplied ownership, movement type, reversal, or operation fields are rejected as 400/`validation_error`. The route calls the atomic inventory service, returning the created movement directly with 201. An adjustment that would make stock negative returns 400/`validation_error` and changes neither the cached quantity nor movement history. INV-03 creates no endpoint for opening balances, order deductions/restorations, threshold editing, or direct quantity updates.
 
+## CUSTOMER-02 customer profiles
+
+`GET /api/v1/customers/` requires token authentication, resolves the current owner/active-staff store server-side, and returns only that store's customer profiles in the standard pagination envelope. It accepts only `page` and `page_size`, ordered by case-insensitive `display_name` then UUID. Rows include `id`, `display_name`, nullable `phone`/`email`, and creation/update timestamps; they never include a store selector.
+
+`GET /api/v1/customers/{customer_id}/` reads one same-store profile. `POST /api/v1/customers/` creates a profile for the server-resolved store and returns it with 201. `PATCH /api/v1/customers/{customer_id}/` partially updates only a same-store profile and returns it with 200. Write payloads accept exactly `display_name`, optional `phone`, and optional `email`; the server rejects store/owner fields and unknown fields. Names must be non-blank; blank optional contact values normalize to `null`; email syntax is validated. Same-store duplicate contacts are permitted: this version has no contact matching, merge, delivery, search, or deletion operation. Missing/foreign detail IDs return indistinguishable 404/`not_found` responses.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:
