@@ -11,6 +11,7 @@ from apps.inventory.models import InventoryMovement, StockUnit
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser
+    from apps.orders.models import OrderItem
 
 
 class StockAdjustmentError(ValidationError):
@@ -26,6 +27,7 @@ def apply_stock_adjustment(
     operation_id: uuid.UUID | str | None = None,
     reason: str | None = None,
     reversal_of: InventoryMovement | None = None,
+    order_item: OrderItem | None = None,
 ) -> InventoryMovement:
     """Atomically append a valid movement and update its cached balance.
 
@@ -81,6 +83,7 @@ def apply_stock_adjustment(
             reason=reason,
             created_by=created_by,
             reversal_of=reversal_of,
+            order_item=order_item,
         )
         movement.save()
 

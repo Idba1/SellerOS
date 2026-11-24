@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from apps.catalog.models import Product, ProductVariant
 from apps.inventory.models import InventoryMovement, StockUnit
+from apps.orders.models import OrderItem, SalesOrder
 from tests.factories import FactoryContext, create_store_graph
 
 
@@ -70,6 +71,17 @@ class InventoryModelTests(TestCase):
             )
 
     def test_movement_validates_direction_reason_reversal_and_creator_store_access(self):
+        order = SalesOrder.objects.create(
+            store=self.graph_a.store,
+            status=SalesOrder.Status.PENDING,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=self.standalone,
+            product_name_snapshot="Standalone",
+            quantity=2,
+            selling_price_snapshot=Decimal("100.00"),
+        )
         opening = InventoryMovement.objects.create(
             store=self.graph_a.store,
             stock_unit=self.stock_unit,
@@ -82,6 +94,7 @@ class InventoryModelTests(TestCase):
             stock_unit=self.stock_unit,
             movement_type=InventoryMovement.MovementType.ORDER_CONFIRMATION_DEDUCTION,
             quantity_delta=-2,
+            order_item=order_item,
             created_by=self.graph_a.staff,
         )
         restoration = InventoryMovement.objects.create(
@@ -90,6 +103,7 @@ class InventoryModelTests(TestCase):
             movement_type=InventoryMovement.MovementType.ORDER_RETURN_RESTORATION,
             quantity_delta=2,
             reversal_of=deduction,
+            order_item=order_item,
             created_by=self.graph_a.owner,
         )
 

@@ -12,7 +12,7 @@ INV-01 selects a **cached current balance plus immutable ledger** representation
 
 The balance is not recomputed on every read and no model `save()` mutates it from a movement. `apps.inventory.services.apply_stock_adjustment` is the supported inventory write path: in one PostgreSQL transaction it locks the stock unit, validates that the resulting balance is nonnegative, inserts one valid movement, and updates the cached balance. It rejects duplicate `(stock_unit, movement_type, operation_id)` effects. Direct model fixtures may create consistent initial state for tests but are not a seller stock-adjustment workflow.
 
-Opening balances are positive; confirmation deductions are negative; cancellation/return restorations are positive; manual adjustments are nonzero and require a reason. Restoration rows reference the original confirmation deduction once. Order-item links remain deferred because order models do not exist yet.
+Opening balances are positive; confirmation deductions are negative; cancellation/return restorations are positive; manual adjustments are nonzero and require a reason. Confirmation deductions now reference their order item and must match its store, product, and variant stock unit. Restoration rows reference the original confirmation deduction once. Cancellation/return order effects remain later lifecycle work.
 
 ## Deferred rules
 

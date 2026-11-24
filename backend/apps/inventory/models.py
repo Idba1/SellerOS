@@ -123,6 +123,11 @@ class InventoryMovement(UUIDTimeStampedModel):
         MovementType.ORDER_CANCELLATION_RESTORATION,
         MovementType.ORDER_RETURN_RESTORATION,
     }
+    ORDER_EFFECT_TYPES = {
+        MovementType.ORDER_CONFIRMATION_DEDUCTION,
+        MovementType.ORDER_CANCELLATION_RESTORATION,
+        MovementType.ORDER_RETURN_RESTORATION,
+    }
 
     store = models.ForeignKey(
         Store,
@@ -133,6 +138,14 @@ class InventoryMovement(UUIDTimeStampedModel):
         StockUnit,
         on_delete=models.PROTECT,
         related_name="movements",
+    )
+    order_item = models.ForeignKey(
+        "orders.OrderItem",
+        on_delete=models.PROTECT,
+        related_name="inventory_movements",
+        null=True,
+        blank=True,
+        default=None,
     )
     movement_type = models.CharField(max_length=32, choices=MovementType.choices)
     quantity_delta = models.IntegerField()
@@ -202,6 +215,28 @@ class InventoryMovement(UUIDTimeStampedModel):
             raise ValidationError(
                 {"stock_unit": "Movement store must match its stock unit."}
             )
+
+        is_order_effect = self.movement_type in self.ORDER_EFFECT_TYPES
+        if is_order_effect and not self.order_item_id:
+            raise ValidationError(
+                {"order_item": "Order movements require an order item reference."}
+            )
+        if not is_order_effect and self.order_item_id:
+            raise ValidationError(
+                {"order_item": "Only order movements can reference an order item."}
+            )
+        if self.order_item_id:
+            if self.order_item.order.store_id != self.store_id:
+                raise ValidationError(
+                    {"order_item": "Order item must belong to the movement store."}
+                )
+            if (
+                self.order_item.product_id != self.stock_unit.product_id
+                or self.order_item.variant_id != self.stock_unit.variant_id
+            ):
+                raise ValidationError(
+                    {"order_item": "Order item must match the movement stock unit."}
+                )
 
         if self.created_by_id and self.store_id:
             is_owner = self.store.owner_id == self.created_by_id
