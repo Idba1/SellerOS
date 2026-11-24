@@ -83,4 +83,4 @@ The versioned examples are in `backend/tests/segment_cases/v1.json`. Each uses `
 
 ## 7. Implementation/test handoff
 
-A later SEGMENT-02 service must centralize these constants, calculate the listed features from same-store order records, return the label plus features/thresholds/basis version, and use the manifest examples without duplicating eligibility arithmetic. It must preserve the customer-history rule until an approved order-return historical-restatement policy replaces it.
+SEGMENT-02 centralizes the feature-basis version and 365-day lookback in `backend/apps/segmentation/features.py`. It accepts an authorized store, same-store customer, and timezone-aware `as_of`, then returns only the listed non-sensitive features. It reuses CUSTOMER-03 eligibility and immutable-order merchandise arithmetic; it does not assign a segment label yet. A later SEGMENT-03 rule service must return the label plus these features/thresholds/basis version without duplicating eligibility arithmetic. It must preserve the customer-history rule until an approved order-return historical-restatement policy replaces it.

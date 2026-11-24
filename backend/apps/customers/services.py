@@ -22,6 +22,21 @@ class CustomerPurchaseHistory:
     total_spend: Decimal
 
 
+def calculate_order_merchandise_spend(order: SalesOrder) -> Decimal:
+    """Return the immutable merchandise amount used by customer-derived facts.
+
+    Callers must provide an order scoped by the server and may prefetch ``items``
+    to avoid per-order queries. Seller delivery cost, tax, payment state, and
+    current catalogue prices are deliberately excluded.
+    """
+
+    line_gross = sum(
+        (item.quantity * item.selling_price_snapshot for item in order.items.all()),
+        Decimal("0.00"),
+    )
+    return line_gross - order.order_discount
+
+
 def get_customer_purchase_history(customer: Customer) -> CustomerPurchaseHistory:
     """Calculate recognized customer purchases from the order ledger.
 
@@ -45,11 +60,7 @@ def get_customer_purchase_history(customer: Customer) -> CustomerPurchaseHistory
     purchase_count = 0
     last_purchase_at = None
     for order in orders:
-        line_gross = sum(
-            (item.quantity * item.selling_price_snapshot for item in order.items.all()),
-            Decimal("0.00"),
-        )
-        total_spend += line_gross - order.order_discount
+        total_spend += calculate_order_merchandise_spend(order)
         purchase_count += 1
         last_purchase_at = order.delivered_at
 
