@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import F
 
+from apps.accounts.models import Store
 from apps.inventory.models import InventoryMovement, StockUnit
 
 if TYPE_CHECKING:
@@ -16,6 +19,33 @@ if TYPE_CHECKING:
 
 class StockAdjustmentError(ValidationError):
     """Raised when a requested adjustment cannot safely be applied."""
+
+
+@dataclass(frozen=True)
+class StockThresholdSummary:
+    """Current store-wide threshold counts without exposing item-level stock."""
+
+    low_stock_count: int
+    configured_threshold_count: int
+
+
+def summarize_stock_thresholds(*, store: Store) -> StockThresholdSummary:
+    """Return the existing seller-defined low-stock rule as aggregate evidence."""
+
+    if not isinstance(store, Store):
+        raise ValueError("A server-resolved store is required.")
+    stock_units = StockUnit.objects.filter(store=store)
+    configured_threshold_count = stock_units.filter(
+        low_stock_threshold__isnull=False
+    ).count()
+    low_stock_count = stock_units.filter(
+        low_stock_threshold__isnull=False,
+        quantity_on_hand__lte=F("low_stock_threshold"),
+    ).count()
+    return StockThresholdSummary(
+        low_stock_count=low_stock_count,
+        configured_threshold_count=configured_threshold_count,
+    )
 
 
 def apply_stock_adjustment(

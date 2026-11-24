@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 
 from apps.analytics.services.products import summarize_product_performance
 from apps.analytics.services.sales import SalesAggregationError, summarize_base_delivered_sales
-from apps.inventory.models import StockUnit
+from apps.inventory.services import summarize_stock_thresholds
 from apps.profit.services.period_profit import summarize_period_profit
 from core.api.query import validate_query_parameters
 from core.permissions import require_authorized_store
@@ -96,12 +96,14 @@ class DashboardSummaryView(APIView):
             profit = summarize_period_profit(store=store, start_date=start_date, end_date=end_date)
         except SalesAggregationError as error:
             raise ValidationError({"non_field_errors": [str(error)]}) from error
-        stock_units = StockUnit.objects.filter(store=store).select_related("product", "variant")
-        low_stock = [unit for unit in stock_units if unit.is_low_stock]
+        stock_thresholds = summarize_stock_thresholds(store=store)
         return Response({
             "period": {"start_date": start_date.isoformat(), "end_date": end_date.isoformat(), "store_timezone": store.timezone},
             "sales": serialize_sales_summary(sales, store_timezone=store.timezone),
             "products": serialize_product_performance(products, store_timezone=store.timezone),
             "profit": {"net_revenue": f"{profit.net_revenue:.2f}", "estimated_operational_profit": None if profit.estimated_operational_profit is None else f"{profit.estimated_operational_profit:.2f}", "completeness_status": profit.completeness_status},
-            "inventory": {"low_stock_count": len(low_stock), "configured_threshold_count": sum(unit.low_stock_threshold is not None for unit in stock_units)},
+            "inventory": {
+                "low_stock_count": stock_thresholds.low_stock_count,
+                "configured_threshold_count": stock_thresholds.configured_threshold_count,
+            },
         })
