@@ -7,3 +7,4 @@ const root = document.getElementById('root')
 if (!root) throw new Error('SellerOS root element is missing')
 
 createRoot(root).render(<StrictMode><App /></StrictMode>)
+
