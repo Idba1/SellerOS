@@ -1,0 +1,84 @@
+{
+  "evaluation_id": "selleros-advisor-evaluation-v1",
+  "revision": 1,
+  "provenance": "synthetic-only",
+  "provider_state": "disabled",
+  "external_action": "NONE",
+  "evaluation_scope": "Deterministic advisor context, structured selection validation, and safe disabled-provider fallback from ADVISOR-01 through ADVISOR-03.",
+  "rubric": [
+    {
+      "dimension": "evidence_consistency",
+      "review_question": "Does the rendered explanation expose only values, source endpoints, periods, and warnings present in the authorized deterministic context?",
+      "method": "Compare the validated response against fixed synthetic context values and its evidence metadata.",
+      "not_measured": "Live-model factuality."
+    },
+    {
+      "dimension": "scope_and_clarity",
+      "review_question": "Can a seller reviewer see the metric period/scope and required limitation without treating it as a forecast or recommendation?",
+      "method": "Inspect the deterministic template output and warning codes for the documented scope disclosures.",
+      "not_measured": "User-study satisfaction, comprehension rate, or business impact."
+    },
+    {
+      "dimension": "unsupported_claim_safety",
+      "review_question": "Do free-text, unknown, duplicate, or context-incompatible provider selections abstain rather than add a business claim?",
+      "method": "Submit adversarial structured candidates to the output validator.",
+      "not_measured": "All possible prompt attacks against an unapproved live model."
+    },
+    {
+      "dimension": "missing_data_disclosure",
+      "review_question": "When profit evidence is incomplete, is numeric profit withheld and the completeness condition retained?",
+      "method": "Use a synthetic context with unavailable profit and inspect the validated response.",
+      "not_measured": "Completeness of real seller records."
+    },
+    {
+      "dimension": "failure_and_privacy_boundary",
+      "review_question": "Do disabled/provider-error paths remain unavailable without invoking the provider or exposing customer identifiers or transport details?",
+      "method": "Mock a provider failure and inspect the bounded prompt and response state.",
+      "not_measured": "External provider reliability, retention, latency, or privacy practices."
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "ADVISOR-EVAL-001",
+      "dimension": "evidence_consistency",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_valid_selection_renders_only_existing_metrics_period_and_warnings",
+      "expected_observation": "Validated output contains fixed synthetic metric values, source metadata, explicit period metadata, and limitation warnings."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-002",
+      "dimension": "scope_and_clarity",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_valid_selection_renders_only_existing_metrics_period_and_warnings",
+      "expected_observation": "Each selected insight retains its documented metric boundary; current stock remains distinct from period sales."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-003",
+      "dimension": "unsupported_claim_safety",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_contradictory_or_free_text_output_becomes_abstention",
+      "expected_observation": "A candidate containing an extra free-text claim becomes abstain with no explanation or evidence."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-004",
+      "dimension": "missing_data_disclosure",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_missing_profit_data_is_disclosed_without_numeric_profit",
+      "expected_observation": "Unavailable profit omits numeric profit and margin while retaining its completeness status."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-005",
+      "dimension": "failure_and_privacy_boundary",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_disabled_or_failed_provider_returns_safe_unavailable_state",
+      "expected_observation": "Disabled and transport-failure cases return unavailable without exposing the simulated transport detail."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-006",
+      "dimension": "failure_and_privacy_boundary",
+      "test_reference": "apps.advisor.tests.test_service.AdvisorGenerationAndValidationTests.test_prompt_contains_metrics_but_not_customer_identifiers",
+      "expected_observation": "The bounded provider prompt includes approved metrics but excludes customer identifiers and purchase-history fields."
+    },
+    {
+      "case_id": "ADVISOR-EVAL-007",
+      "dimension": "evidence_consistency",
+      "test_reference": "apps.advisor.tests.test_context.AdvisorContextTests.test_foreign_optional_evidence_is_rejected_without_disclosure",
+      "expected_observation": "Foreign optional evidence is rejected before it can enter the advisor context."
+    }
+  ]
+}
