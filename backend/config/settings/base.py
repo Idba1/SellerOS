@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from apps.ai.providers.configuration import load_llm_provider_policy
 from core.database import postgres_database
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -11,6 +12,10 @@ if not SECRET_KEY.strip():
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must be supplied in the environment.")
 if SECRET_KEY.strip() == "REPLACE_ME":
     raise ImproperlyConfigured("DJANGO_SECRET_KEY must not use the example placeholder.")
+
+# Provider policy contains no API key. PLAN-06 currently permits no provider
+# execution or spend; any non-disabled LLM environment configuration fails closed.
+LLM_PROVIDER_POLICY = load_llm_provider_policy(os.environ)
 
 INSTALLED_APPS = [
     "core.apps.CoreConfig",
