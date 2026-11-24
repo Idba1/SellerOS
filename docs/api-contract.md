@@ -46,6 +46,12 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 `GET /api/v1/customers/{customer_id}/purchase-history/` accepts no query parameters and returns the current same-store derived summary directly: `purchase_count`, nullable `last_purchase_at`, and two-decimal string `total_spend`. It is calculated at request time from recorded eligible order snapshots; the customer table has no cached count, timestamp, or spend column. A freshly seeded eligible order is reflected by the next request, while returned/refunded orders do not add a current eligible purchase. A missing/foreign ID returns 404/`not_found` without profile or order details. This is read-only; order creation/lifecycle APIs are not part of CUSTOMER-05.
 
+## ORDER-05 order reads
+
+`GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
+
+List rows include opaque order/customer IDs, nullable customer display name, status, currency, order discount, nullable seller delivery cost, lifecycle timestamps, and audit timestamps. `GET /api/v1/orders/{order_id}/` uses the same store scope and additionally includes immutable item snapshots, product/variant IDs, quantities, price/cost snapshots, and discount allocations. Neither endpoint accepts a store selector. Foreign/missing IDs return indistinguishable 404/`not_found` responses. ORDER-05 has no creation, edit, cancellation, refund, payment, or analytics route.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:
