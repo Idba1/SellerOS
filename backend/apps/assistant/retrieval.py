@@ -48,6 +48,7 @@ class ProductStockFact:
     variant_is_active: bool | None
     availability: str
     product_updated_at: datetime
+    variant_updated_at: datetime | None
     stock_updated_at: datetime
 
 
@@ -136,5 +137,6 @@ def _as_product_stock_fact(stock_unit: StockUnit, currency_code: str) -> Product
             else AVAILABILITY_UNAVAILABLE
         ),
         product_updated_at=stock_unit.product.updated_at,
+        variant_updated_at=variant.updated_at if variant else None,
         stock_updated_at=stock_unit.updated_at,
     )
