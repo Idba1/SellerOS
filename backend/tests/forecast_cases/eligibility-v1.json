@@ -2,7 +2,7 @@
   "policy_id": "selleros-forecast-eligibility-v1",
   "revision": 1,
   "provenance": "synthetic-only",
-  "threshold_status": "decision_required",
+  "threshold_status": "approved_daily_v1",
   "model_training": "NOT_IMPLEMENTED",
   "candidate_gates": [
     {
@@ -12,7 +12,7 @@
       "minimum_complete_consecutive_buckets": 56,
       "minimum_nonzero_buckets": 14,
       "minimum_holdout_buckets": 7,
-      "status": "decision_required"
+      "status": "approved"
     },
     {
       "candidate_id": "weekly-next-4",
@@ -21,7 +21,7 @@
       "minimum_complete_consecutive_buckets": 16,
       "minimum_nonzero_buckets": 8,
       "minimum_holdout_buckets": 4,
-      "status": "decision_required"
+      "status": "not_selected"
     }
   ],
   "cases": [

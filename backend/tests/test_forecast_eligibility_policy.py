@@ -1,4 +1,4 @@
-"""Structural guard for the unapproved FORECAST-02 candidate eligibility policy."""
+"""Structural guard for the selected FORECAST-02 daily eligibility policy."""
 import json
 from pathlib import Path
 
@@ -16,18 +16,23 @@ class ForecastEligibilityPolicyTests(SimpleTestCase):
     def setUp(self):
         self.policy = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
 
-    def test_candidates_remain_synthetic_unapproved_and_model_free(self):
+    def test_daily_gate_is_selected_and_model_training_remains_unimplemented(self):
         self.assertEqual(self.policy["policy_id"], "selleros-forecast-eligibility-v1")
         self.assertEqual(self.policy["revision"], 1)
         self.assertEqual(self.policy["provenance"], "synthetic-only")
-        self.assertEqual(self.policy["threshold_status"], "decision_required")
+        self.assertEqual(self.policy["threshold_status"], "approved_daily_v1")
         self.assertEqual(self.policy["model_training"], "NOT_IMPLEMENTED")
         self.assertEqual(
             {candidate["candidate_id"] for candidate in self.policy["candidate_gates"]},
             EXPECTED_CANDIDATES,
         )
+        candidate_statuses = {
+            candidate["candidate_id"]: candidate["status"]
+            for candidate in self.policy["candidate_gates"]
+        }
+        self.assertEqual(candidate_statuses["daily-next-7"], "approved")
+        self.assertEqual(candidate_statuses["weekly-next-4"], "not_selected")
         for candidate in self.policy["candidate_gates"]:
-            self.assertEqual(candidate["status"], "decision_required")
             self.assertGreater(candidate["horizon_buckets"], 0)
             self.assertGreater(candidate["minimum_complete_consecutive_buckets"], 0)
             self.assertGreater(candidate["minimum_nonzero_buckets"], 0)

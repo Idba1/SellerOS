@@ -27,16 +27,16 @@ If a condition is false, return one of these safe states instead of a number:
 | `invalid_history` | Duplicate, missing-item, invalid timestamp/quantity, or other integrity failure exists. | Data-quality condition only; do not calculate a partial forecast. |
 | `decision_blocked` | Coverage, stockout, return-series, or threshold policy is not approved. | Which policy is missing; do not substitute a zero/negative bucket or estimate. |
 
-## 3. Candidate minimum-data gates — [DECISION REQUIRED]
+## 3. Approved v1 minimum-data gate
 
-The following are review candidates from the approved planning record, **not active thresholds**. The team/supervisor must select one method, horizon, and gate after reviewing a named, authorized dataset. Until that review is recorded, an audit cannot mark a store eligible merely because it has a large row count.
+Following the team's explicit implementation authorization, SellerOS v1 selects the daily candidate below. It is a conservative prototype gate, not a guarantee of accuracy or business benefit.
 
 | Candidate | Proposed granularity/horizon | Candidate valid-history gate | Why it is only a candidate |
 | --- | --- | --- | --- |
-| Daily baseline | Next 7 days | 56 consecutive **complete** daily buckets, at least 14 nonzero-sale days, and 7 later complete days reserved for past-only evaluation. | Daily data can be sparse; the values are not a statistical guarantee or approved product promise. |
-| Weekly baseline | Next 4 weeks | 16 consecutive **complete** weekly buckets, at least 8 nonzero-sale weeks, and 4 later complete weeks reserved for past-only evaluation. | Weekly aggregation may reduce sparsity but can hide operational variation; it is not selected yet. |
+| **Selected: daily v1** | Next 7 days | 56 consecutive **complete** daily buckets, at least 14 nonzero-sale days, and 7 later complete days reserved for past-only evaluation. | Preserves short-cycle seller operations while refusing sparse/unknown coverage. |
+| Not selected | Weekly / next 4 weeks | 16 consecutive complete weeks, at least 8 nonzero-sale weeks, and 4 holdout weeks. | Kept only as a non-active alternative; no weekly output is implemented. |
 
-**[DECISION REQUIRED] F-02:** Select exactly one candidate (or a reviewed replacement), including its bucket boundary, horizon, minimum complete/nonzero buckets, cutoff convention, stockout treatment, return-series treatment, and holdout length. Selecting this policy is a prerequisite for any numerical forecast implementation; it is outside FORECAST-02.
+The selected v1 policy uses store-local calendar-day boundaries, an explicit data cutoff, and a seven-day past-only holdout. A terminal returned/refunded delivery, duplicate delivery evidence, unknown coverage, missing order items, or unannotated stockout blocks the forecast; it is not converted to a negative/zero demand observation.
 
 ## 4. Current-data assessment
 
