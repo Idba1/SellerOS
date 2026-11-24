@@ -1,0 +1,6 @@
+import type { PaginatedResponse } from '../api/types'
+export type Expense = { id: string; description: string; category: string; amount: string; incurred_on: string; created_at: string; updated_at: string }
+export type ExpensePayload = Pick<Expense, 'description' | 'category' | 'amount' | 'incurred_on'>
+function isExpense(value: unknown): value is Expense { return value !== null && typeof value === 'object' && ['id', 'description', 'category', 'amount', 'incurred_on', 'created_at', 'updated_at'].every(key => key in value && typeof (value as Record<string, unknown>)[key] === 'string') }
+export function decodeExpense(value: unknown): Expense { if (!isExpense(value)) throw new Error('Invalid expense response.'); return value }
+export function decodeExpensePage(value: unknown): PaginatedResponse<Expense> { if (value === null || typeof value !== 'object' || !('count' in value) || typeof value.count !== 'number' || !('next' in value) || (typeof value.next !== 'string' && value.next !== null) || !('previous' in value) || (typeof value.previous !== 'string' && value.previous !== null) || !('results' in value) || !Array.isArray(value.results) || !value.results.every(isExpense)) throw new Error('Invalid expense list response.'); return value as PaginatedResponse<Expense> }
