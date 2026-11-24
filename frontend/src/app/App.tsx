@@ -6,11 +6,15 @@ import { Dashboard } from '../dashboard/Dashboard'
 import { Products } from '../products/Products'
 import { Orders } from '../orders/Orders'
 import { Analytics } from '../analytics/Analytics'
+import { AuthenticationPage, PasswordRecoveryUnavailable } from '../auth/AuthPage'
 
 export function App() {
   const route = resolveRoute(window.location.pathname)
   const title = route?.title ?? 'Page not found'
   useEffect(() => { document.title = `${title} | SellerOS` }, [title])
+  if (route?.path === '/login') return <AuthenticationPage />
+  if (route?.path === '/forgot-password') return <PasswordRecoveryUnavailable />
+  if (route?.path === '/reset-password') return <PasswordRecoveryUnavailable reset />
   if (route?.path === '/') return <AppLayout title={title} path={route.path}><Dashboard /></AppLayout>
   if (route?.path === '/analytics') return <AppLayout title={title} path={route.path}><Analytics /></AppLayout>
   if (route?.path === '/orders') return <AppLayout title={title} path={route.path}><Orders /></AppLayout>

@@ -1,4 +1,7 @@
 export const routes = [
+  { path: '/login', title: 'Sign in', description: 'Seller account access.' },
+  { path: '/forgot-password', title: 'Password recovery', description: 'Password recovery availability.' },
+  { path: '/reset-password', title: 'Reset password', description: 'Password reset availability.' },
   { path: '/', title: 'Dashboard', description: 'Sales and business overview.' },
   { path: '/products', title: 'Products', description: 'Your product catalogue.' },
   { path: '/inventory', title: 'Inventory', description: 'Stock records and movements.' },
