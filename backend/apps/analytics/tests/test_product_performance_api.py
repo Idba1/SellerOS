@@ -138,3 +138,37 @@ class ProductPerformanceApiTests(APITestCase):
         self.assertEqual(invalid_response.status_code, 400)
         self.assertEqual(invalid_response.data["error"]["code"], "validation_error")
         self.assertIn("store_id", invalid_response.data["error"]["details"])
+
+    def test_period_start_is_inclusive_and_end_is_exclusive(self):
+        period_start = datetime(2026, 1, 10, 0, 0, tzinfo=self.tz)
+        period_end = datetime(2026, 1, 11, 0, 0, tzinfo=self.tz)
+        self.create_delivered_order(
+            store=self.graph_a.store,
+            product=self.product_a,
+            quantity=2,
+            price=Decimal("100.00"),
+            delivered_at=period_start,
+        )
+        self.create_delivered_order(
+            store=self.graph_a.store,
+            product=self.product_a,
+            quantity=5,
+            price=Decimal("100.00"),
+            delivered_at=period_end,
+        )
+        self.authenticate(self.graph_a.owner)
+
+        response = self.client.get(self.period_url(period_start, period_end))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["result_state"], "data_present")
+        self.assertEqual(
+            response.data["products"],
+            [
+                {
+                    "product_id": str(self.product_a.pk),
+                    "delivered_units": 2,
+                    "delivered_gross_sales": "200.00",
+                }
+            ],
+        )

@@ -160,3 +160,37 @@ class SalesSummaryApiTests(APITestCase):
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(response.data["error"]["code"], "validation_error")
                 self.assertIn(field, response.data["error"]["details"])
+
+    def test_duplicate_delivery_evidence_returns_a_stable_validation_error(self):
+        delivered_at = datetime(2026, 1, 10, 10, 0, tzinfo=self.tz)
+        order = self.create_delivered_order(
+            store=self.graph_a.store,
+            product=self.product_a,
+            quantity=1,
+            price=Decimal("100.00"),
+            delivered_at=delivered_at,
+        )
+        duplicate_event = OrderStatusEvent.objects.create(
+            order=order,
+            from_status=SalesOrder.Status.RETURN_REQUESTED,
+            to_status=SalesOrder.Status.DELIVERED,
+            initiated_by=self.graph_a.owner,
+        )
+        OrderStatusEvent.objects.filter(pk=duplicate_event.pk).update(
+            occurred_at=datetime(2026, 1, 11, 10, 0, tzinfo=self.tz)
+        )
+        self.authenticate(self.graph_a.owner)
+
+        response = self.client.get(
+            self.summary_url(
+                datetime(2026, 1, 1, tzinfo=self.tz),
+                datetime(2026, 2, 1, tzinfo=self.tz),
+            )
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data["error"]["code"], "validation_error")
+        self.assertEqual(
+            response.data["error"]["details"]["non_field_errors"],
+            ["Duplicate delivery evidence prevents a trustworthy sales summary."],
+        )
