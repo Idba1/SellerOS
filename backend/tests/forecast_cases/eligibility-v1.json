@@ -1,0 +1,71 @@
+{
+  "policy_id": "selleros-forecast-eligibility-v1",
+  "revision": 1,
+  "provenance": "synthetic-only",
+  "threshold_status": "decision_required",
+  "model_training": "NOT_IMPLEMENTED",
+  "candidate_gates": [
+    {
+      "candidate_id": "daily-next-7",
+      "granularity": "daily",
+      "horizon_buckets": 7,
+      "minimum_complete_consecutive_buckets": 56,
+      "minimum_nonzero_buckets": 14,
+      "minimum_holdout_buckets": 7,
+      "status": "decision_required"
+    },
+    {
+      "candidate_id": "weekly-next-4",
+      "granularity": "weekly",
+      "horizon_buckets": 4,
+      "minimum_complete_consecutive_buckets": 16,
+      "minimum_nonzero_buckets": 8,
+      "minimum_holdout_buckets": 4,
+      "status": "decision_required"
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "FORECAST-ELIGIBILITY-001",
+      "condition": "No valid original delivery events.",
+      "expected_state": "insufficient_history",
+      "required_disclosure": "No valid delivery history is available; no numerical forecast was generated."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-002",
+      "condition": "One observed delivery date with no known coverage for unobserved dates.",
+      "expected_state": "decision_blocked",
+      "required_disclosure": "Observation coverage is unknown; a missing date is not assumed to be zero demand."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-003",
+      "condition": "History has gaps inside its date span.",
+      "expected_state": "decision_blocked",
+      "required_disclosure": "Calendar gaps require known coverage before they can be used as zero-demand buckets."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-004",
+      "condition": "An order has duplicate original delivery evidence.",
+      "expected_state": "invalid_history",
+      "required_disclosure": "Duplicate delivery evidence prevents a trustworthy forecast input series."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-005",
+      "condition": "A valid delivery has a current returned or refunded status.",
+      "expected_state": "decision_blocked",
+      "required_disclosure": "Return-series treatment is not approved; no negative demand is inferred."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-006",
+      "condition": "A complete candidate daily history has 55 consecutive buckets, 14 nonzero buckets, and 7 holdout buckets.",
+      "expected_state": "insufficient_history",
+      "required_disclosure": "The selected candidate daily gate requires 56 complete consecutive buckets."
+    },
+    {
+      "case_id": "FORECAST-ELIGIBILITY-007",
+      "condition": "A complete candidate weekly history has 16 consecutive buckets, 7 nonzero buckets, and 4 holdout buckets.",
+      "expected_state": "insufficient_history",
+      "required_disclosure": "The selected candidate weekly gate requires 8 nonzero buckets."
+    }
+  ]
+}

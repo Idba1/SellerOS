@@ -46,6 +46,8 @@ The audit always retains `history_coverage_unknown` because current records have
 
 Any future numerical forecasting work requires a separately authorized task to introduce a reviewed coverage source, return-series treatment, granularity/horizon, sufficiency gate, and past-only evaluation method. FORECAST-01 makes none of those calculations and does not infer them from the current sparse data.
 
+FORECAST-02 documents unapproved candidate gates and explicit insufficient-history disclosures in [forecast-method.md](forecast-method.md). It does not change FORECAST-01's current no-training outcome.
+
 ## 5. Verification evidence
 
 ```powershell
