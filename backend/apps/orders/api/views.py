@@ -1,6 +1,7 @@
 """Authenticated, store-scoped order list and detail reads."""
 from datetime import date
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -8,11 +9,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.orders.models import SalesOrder
+from apps.orders.services import transition_order_status
 from core.api.pagination import StandardPagination
 from core.api.query import validate_query_parameters
 from core.permissions import scope_to_authorized_store
 
-from .serializers import OrderDetailSerializer, OrderSerializer
+from .serializers import (
+    OrderDetailSerializer,
+    OrderSerializer,
+    OrderStatusEventSerializer,
+    OrderStatusUpdateSerializer,
+)
 
 
 ORDER_LIST_QUERY_PARAMETERS = {"status", "created_from", "created_to", "page", "page_size"}
@@ -71,3 +78,34 @@ class OrderDetailView(APIView):
         )
         order = get_object_or_404(orders, pk=order_id)
         return Response(OrderDetailSerializer(order).data)
+
+
+class OrderStatusUpdateView(APIView):
+    """Apply one approved transition and return its immutable audit record."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        validate_query_parameters(request.query_params, set())
+        orders = scope_to_authorized_store(
+            SalesOrder.objects.select_related("customer"), request.user
+        )
+        get_object_or_404(orders, pk=order_id)
+
+        serializer = OrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            order, event = transition_order_status(
+                order_id=order_id,
+                to_status=serializer.validated_data["status"],
+                initiated_by=request.user,
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(error.message_dict) from error
+
+        return Response(
+            {
+                "order": OrderSerializer(order).data,
+                "status_event": OrderStatusEventSerializer(event).data,
+            }
+        )

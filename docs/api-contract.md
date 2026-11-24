@@ -52,6 +52,14 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 List rows include opaque order/customer IDs, nullable customer display name, status, currency, order discount, nullable seller delivery cost, lifecycle timestamps, and audit timestamps. `GET /api/v1/orders/{order_id}/` uses the same store scope and additionally includes immutable item snapshots, product/variant IDs, quantities, price/cost snapshots, and discount allocations. Neither endpoint accepts a store selector. Foreign/missing IDs return indistinguishable 404/`not_found` responses. ORDER-05 has no creation, edit, cancellation, refund, payment, or analytics route.
 
+## ORDER-06 order-status action and audit evidence
+
+`POST /api/v1/orders/{order_id}/status/` requires token authentication and resolves the order only from the caller's server-authorized store scope. It accepts exactly `{"status":"<stored enum>"}`; query parameters, a `store_id`, actor identifiers, and unknown body fields are rejected as 400/`validation_error`. A missing or foreign ID returns the same 404/`not_found` envelope as order detail, without disclosing the foreign order.
+
+On an accepted transition, the response is `200` with `{"order":{...},"status_event":{"id":"<opaque UUID>","from_status":"...","to_status":"...","initiated_by_id":"<opaque UUID>","occurred_at":"<ISO-8601>"}}`. The event is immutable evidence of the accepted state change; it stores no secrets and there is no edit/delete event route. PENDING to CONFIRMED uses the existing atomic stock-deduction flow and records its event in the same transaction.
+
+This increment safely supports DRAFT→PENDING, DRAFT→CANCELLED, PENDING→CANCELLED, PENDING→CONFIRMED, CONFIRMED→PROCESSING, PROCESSING→SHIPPED, SHIPPED→DELIVERED, and DELIVERED→RETURN_REQUESTED. Confirmation requires order items and configured available stock. It deliberately rejects same-state changes and any transition with unimplemented financial or inventory effects, including cancellation after confirmation, return acceptance, refunds, and the unresolved shipped-origin return paths. Those routes cannot claim success until the reversal and revenue rules from the order decision record are implemented. No external notification is sent.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:

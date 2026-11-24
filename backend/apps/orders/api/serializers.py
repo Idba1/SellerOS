@@ -1,7 +1,7 @@
 """Read-only order representations for seller review."""
 from rest_framework import serializers
 
-from apps.orders.models import OrderItem, SalesOrder
+from apps.orders.models import OrderItem, OrderStatusEvent, SalesOrder
 
 
 class OrderItemReadSerializer(serializers.ModelSerializer):
@@ -58,4 +58,37 @@ class OrderDetailSerializer(OrderSerializer):
 
     class Meta(OrderSerializer.Meta):
         fields = OrderSerializer.Meta.fields + ("items",)
+        read_only_fields = fields
+
+
+class OrderStatusUpdateSerializer(serializers.Serializer):
+    """Validate the single explicit input accepted by the status endpoint."""
+
+    status = serializers.ChoiceField(choices=SalesOrder.Status.choices)
+
+    def to_internal_value(self, data):
+        if hasattr(data, "keys"):
+            unexpected = set(data.keys()) - set(self.fields)
+            if unexpected:
+                raise serializers.ValidationError(
+                    {
+                        field: ["This field is not allowed."]
+                        for field in sorted(unexpected)
+                    }
+                )
+        return super().to_internal_value(data)
+
+
+class OrderStatusEventSerializer(serializers.ModelSerializer):
+    initiated_by_id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = OrderStatusEvent
+        fields = (
+            "id",
+            "from_status",
+            "to_status",
+            "initiated_by_id",
+            "occurred_at",
+        )
         read_only_fields = fields

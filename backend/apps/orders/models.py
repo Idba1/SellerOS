@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from apps.accounts.models import Store, UUIDTimeStampedModel
+from apps.accounts.models import Store, StoreMembership, UUIDTimeStampedModel
 from apps.catalog.models import Product, ProductVariant
 from apps.customers.models import Customer
 
@@ -198,3 +198,56 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
+
+
+class OrderStatusEvent(UUIDTimeStampedModel):
+    """Immutable evidence of one accepted order status transition."""
+
+    order = models.ForeignKey(
+        SalesOrder,
+        on_delete=models.PROTECT,
+        related_name="status_events",
+    )
+    from_status = models.CharField(max_length=24, choices=SalesOrder.Status.choices)
+    to_status = models.CharField(max_length=24, choices=SalesOrder.Status.choices)
+    initiated_by = models.ForeignKey(
+        "accounts.Account",
+        on_delete=models.PROTECT,
+        related_name="order_status_events",
+    )
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(from_status=models.F("to_status")),
+                name="orders_status_event_status_changed",
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.order_id and self.initiated_by_id:
+            is_owner = self.order.store.owner_id == self.initiated_by_id
+            is_active_staff = StoreMembership.objects.filter(
+                store_id=self.order.store_id,
+                account_id=self.initiated_by_id,
+                is_active=True,
+            ).exists()
+            if not is_owner and not is_active_staff:
+                raise ValidationError(
+                    {"initiated_by": "Actor must have active order-store access."}
+                )
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            raise ValidationError(
+                {"non_field_errors": ["Order status events are immutable."]}
+            )
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError(
+            {"non_field_errors": ["Order status events cannot be deleted."]}
+        )

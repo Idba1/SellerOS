@@ -5,7 +5,7 @@ from django.test import TestCase
 
 from apps.catalog.models import Product
 from apps.inventory.models import InventoryMovement, StockUnit
-from apps.orders.models import OrderItem, SalesOrder
+from apps.orders.models import OrderItem, OrderStatusEvent, SalesOrder
 from apps.orders.serializers import OrderCreateSerializer
 from apps.orders.services import (
     OrderConfirmationError,
@@ -61,6 +61,11 @@ class OrderConfirmationServiceTests(TestCase):
         )
         self.assertEqual(movement.quantity_delta, -2)
         self.assertEqual(movement.order_item, item)
+        event = OrderStatusEvent.objects.get()
+        self.assertEqual(event.order, order)
+        self.assertEqual(event.from_status, SalesOrder.Status.PENDING)
+        self.assertEqual(event.to_status, SalesOrder.Status.CONFIRMED)
+        self.assertEqual(event.initiated_by, self.graph.owner)
 
     def test_insufficient_combined_demand_rolls_back_new_order_and_all_effects(self):
         with self.assertRaises(OrderConfirmationError):

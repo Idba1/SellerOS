@@ -6,7 +6,7 @@ from django.test import TestCase
 
 from apps.catalog.models import Product, ProductVariant
 from apps.customers.models import Customer
-from apps.orders.models import OrderItem, SalesOrder
+from apps.orders.models import OrderItem, OrderStatusEvent, SalesOrder
 from tests.factories import FactoryContext, create_store_graph
 
 
@@ -148,3 +148,34 @@ class SalesOrderModelTests(TestCase):
         for values in cases:
             with self.subTest(values=values), self.assertRaises(ValidationError):
                 OrderItem.objects.create(order=order, **values)
+
+    def test_status_event_requires_authorized_actor_and_is_immutable(self):
+        order = self.create_order()
+        event = OrderStatusEvent.objects.create(
+            order=order,
+            from_status=SalesOrder.Status.SHIPPED,
+            to_status=SalesOrder.Status.DELIVERED,
+            initiated_by=self.graph_a.owner,
+        )
+        self.assertEqual(event.order, order)
+
+        with self.assertRaises(ValidationError):
+            OrderStatusEvent.objects.create(
+                order=order,
+                from_status=SalesOrder.Status.DELIVERED,
+                to_status=SalesOrder.Status.DELIVERED,
+                initiated_by=self.graph_a.owner,
+            )
+        with self.assertRaises(ValidationError):
+            OrderStatusEvent.objects.create(
+                order=order,
+                from_status=SalesOrder.Status.DELIVERED,
+                to_status=SalesOrder.Status.RETURN_REQUESTED,
+                initiated_by=self.graph_b.owner,
+            )
+
+        event.to_status = SalesOrder.Status.RETURN_REQUESTED
+        with self.assertRaises(ValidationError):
+            event.save()
+        with self.assertRaises(ValidationError):
+            event.delete()
