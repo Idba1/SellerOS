@@ -54,6 +54,16 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 Closed reporting periods, edits to expenses already included in saved analysis, controlled category taxonomy, and category-level analytics remain **[DECISION REQUIRED]**. This API therefore makes no inferred period lock, allocation, tax, accounting, or automatic profit calculation.
 
+## ANALYTICS-03 base sales summary
+
+`GET /api/v1/analytics/sales-summary/` requires token authentication and resolves the store from the authenticated owner/active-staff account. It accepts exactly one each of required `period_start` and `period_end` query parameters. They are ISO 8601 timestamps with offsets and form the explicit half-open interval `period_start <= delivery_event < period_end`; the caller must supply the desired instant boundaries. No `store_id`, default range, date-only filter, browser-timezone conversion, bucket grouping, product filter, or pagination is accepted.
+
+The direct response contains `period` (`start`, exclusive `end_exclusive`, and server-recorded `store_timezone`), `result_state`, `totals`, and product gross summaries. Totals are `delivered_order_count`, `delivered_units`, BDT decimal strings `delivered_gross_sales`, `delivered_order_discounts`, and `delivered_net_sales_before_reversals`, plus `data_completeness_status` and `return_adjustment_status`. Product rows contain only product ID, delivered units, and snapshot-based delivered gross sales. The server uses original immutable `DELIVERED` events and order-line snapshots, so a returned/refunded current status with original delivery evidence remains in base delivered totals. Foreign-store records are never selected.
+
+When there are no eligible delivery events, the response has zero base totals, `products: []`, and `result_state: "no_eligible_events_coverage_unknown"`; it does not claim the range is known complete. `retained_net_sales`, return/refund adjustments, average order value, COGS, profit, margin, tax, forecasts, and recommendations are absent. Invalid/missing/non-aware bounds, an end not after start, repeated/unknown query keys, or duplicate delivery evidence return 400/`validation_error` without partial totals.
+
+**[DECISION REQUIRED]** DR-04, DR-06, DR-07, and AC-01 still govern rounding, return/refund amount, public local-date/bucket/range semantics, reversal-period attribution, retained units/orders, and AOV. This endpoint deliberately exposes only the base-delivered contract from ANALYTICS-01.
+
 ## ORDER-05 order reads
 
 `GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
