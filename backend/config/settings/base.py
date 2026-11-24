@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "apps.customers.apps.CustomersConfig",
     "apps.inventory.apps.InventoryConfig",
     "apps.orders.apps.OrdersConfig",
+    "apps.expenses.apps.ExpensesConfig",
     "rest_framework",
     "rest_framework.authtoken",
 ]

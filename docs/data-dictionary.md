@@ -225,13 +225,14 @@ These are prototype decisions, not financial-accounting advice, provider approva
 | `id` | `uuid` / `UUIDField` | PK; generated | Expense identifier. |
 | `store_id` | `uuid` FK → `Store.id` / `ForeignKey` | required | Server-scoped; `on_delete=PROTECT`. |
 | `description` | `varchar(240)` / `CharField` | required | Trimmed non-blank seller-entered description. |
+| `category` | `varchar(80)` / `CharField` | required | Trimmed non-blank seller-entered category; no controlled taxonomy in this increment. |
 | `amount` | `numeric(12,2)` / `DecimalField` | required | BDT; strictly greater than `0.00`. |
 | `incurred_on` | `date` / `DateField` | required | Store-local business date; cannot be in the future for the prototype. |
 | `recorded_by_id` | `uuid` FK → `Account.id` / `ForeignKey` | required | Authorized own-store owner/staff member; `on_delete=PROTECT`. |
 | `created_at` | `timestamptz` / `DateTimeField` | required; server-set | UTC recording time. |
 | `updated_at` | `timestamptz` / `DateTimeField` | required; server-set | UTC correction time before aggregate use. |
 
-**Constraints:** delivery cost is not a general `Expense`; it belongs in `SalesOrder.seller_delivery_cost`. There is no order FK and no automatic allocation to orders/products.
+**Constraints:** delivery cost is not a general `Expense`; it belongs in `SalesOrder.seller_delivery_cost`. There is no order FK and no automatic allocation to orders/products. **[DECISION REQUIRED]** A controlled expense-category taxonomy, reporting treatment, and category-level analytics are not selected; this field is currently required free text only.
 
 **Delete policy:** correct with a tracked update before reporting; do not ordinary-delete an expense already included in a saved analysis. A later reporting/audit task can add a correction ledger if required.
 
