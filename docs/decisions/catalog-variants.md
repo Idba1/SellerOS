@@ -14,6 +14,8 @@ PRODUCT-02 write serializers therefore accept neither `store_id` nor `product_id
 
 PRODUCT-04 adds same-store product creation and partial update only. `is_active=false` is the available deactivation action; no hard delete exists. A product with existing variant rows cannot be changed to `has_variants=false` through this API, because that would contradict the chosen standalone-versus-variant representation. This is an API consistency guard, not a decision about future stock/order-history conversion.
 
+PRODUCT-05 records the current duplicate semantics as executable tests: product names are not unique, including within one authorized store, because the data dictionary explicitly has no product-name uniqueness constraint. `sku` is not an accepted product API field because no SKU model field or uniqueness scope exists. This is not a substitute SKU policy.
+
 ## Deferred rules
 
 **[DECISION REQUIRED] D-08 / ERD-03:** SKU scope/uniqueness, variant attribute structure, product archive/delete policy beyond the current active flag, variant/stock-unit mapping, and whether/how a product can change `has_variants` after inventory or order history exists.
