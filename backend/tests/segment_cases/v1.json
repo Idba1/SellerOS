@@ -1,0 +1,85 @@
+{
+  "case_set_id": "selleros-segment-cases-v1",
+  "revision": 1,
+  "provenance": "synthetic-only",
+  "currency": "BDT",
+  "segment_rule_version": "segment-v1",
+  "as_of_local_date": "2026-07-01",
+  "eligibility": {
+    "included_current_statuses": ["DELIVERED", "RETURN_REQUESTED"],
+    "excluded_current_statuses": ["DRAFT", "PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "CANCELLED", "RETURNED", "REFUNDED"]
+  },
+  "thresholds": {
+    "new_recency_days_maximum": 30,
+    "active_recency_days_maximum": 90,
+    "high_value_trailing_days": 365,
+    "high_value_spend_bdt": "10000.00",
+    "high_value_minimum_purchase_count": 2
+  },
+  "cases": [
+    {
+      "case_id": "SEGMENT-CASE-001",
+      "recorded_purchase_count": 0,
+      "recency_days": null,
+      "trailing_365_day_spend_bdt": "0.00",
+      "expected_segment": "NO_RECORDED_ELIGIBLE_PURCHASE",
+      "explanation": "No eligible purchase in the recorded store ledger is not proof of a new customer."
+    },
+    {
+      "case_id": "SEGMENT-CASE-002",
+      "recorded_purchase_count": 1,
+      "recency_days": 30,
+      "trailing_365_day_spend_bdt": "500.00",
+      "expected_segment": "NEW",
+      "explanation": "The first recorded purchase is on the inclusive 30-day new-customer boundary."
+    },
+    {
+      "case_id": "SEGMENT-CASE-003",
+      "recorded_purchase_count": 1,
+      "recency_days": 31,
+      "trailing_365_day_spend_bdt": "500.00",
+      "expected_segment": "ACTIVE_ONE_TIME",
+      "explanation": "One recorded purchase is active but immediately outside the new-customer window."
+    },
+    {
+      "case_id": "SEGMENT-CASE-004",
+      "recorded_purchase_count": 3,
+      "recency_days": 2,
+      "trailing_365_day_spend_bdt": "9999.99",
+      "expected_segment": "REPEAT",
+      "explanation": "Active repeated purchase behavior remains just below the high-value spend threshold."
+    },
+    {
+      "case_id": "SEGMENT-CASE-005",
+      "recorded_purchase_count": 2,
+      "recency_days": 10,
+      "trailing_365_day_spend_bdt": "10000.00",
+      "expected_segment": "HIGH_VALUE",
+      "explanation": "Active repeat behavior meets the inclusive BDT high-value threshold."
+    },
+    {
+      "case_id": "SEGMENT-CASE-006",
+      "recorded_purchase_count": 3,
+      "recency_days": 91,
+      "trailing_365_day_spend_bdt": "12000.00",
+      "expected_segment": "INACTIVE",
+      "explanation": "The 91-day inactivity boundary overrides historical high spend."
+    },
+    {
+      "case_id": "SEGMENT-CASE-007",
+      "recorded_purchase_count": 4,
+      "recency_days": 90,
+      "trailing_365_day_spend_bdt": "9000.00",
+      "expected_segment": "REPEAT",
+      "explanation": "The inclusive active boundary remains repeat when high-value spend is not met."
+    },
+    {
+      "case_id": "SEGMENT-CASE-008",
+      "recorded_purchase_count": 1,
+      "recency_days": 91,
+      "trailing_365_day_spend_bdt": "500.00",
+      "expected_segment": "INACTIVE",
+      "explanation": "Inactive precedence applies before one-time/new labels."
+    }
+  ]
+}
