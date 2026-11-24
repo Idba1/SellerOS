@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.expenses.apps.ExpensesConfig",
     "apps.analytics.apps.AnalyticsConfig",
     "apps.segmentation.apps.SegmentationConfig",
+    "apps.forecast.apps.ForecastConfig",
     "apps.assistant.apps.AssistantConfig",
     "rest_framework",
     "rest_framework.authtoken",
