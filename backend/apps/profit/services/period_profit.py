@@ -46,6 +46,7 @@ class ExpenseContribution:
 
     expense_id: object
     amount: Decimal
+    incurred_on: date
 
 
 @dataclass(frozen=True)
@@ -114,7 +115,11 @@ def summarize_period_profit(
         event_history=event_history,
     )
     expense_contributions = tuple(
-        ExpenseContribution(expense_id=expense.pk, amount=_money(expense.amount))
+        ExpenseContribution(
+            expense_id=expense.pk,
+            amount=_money(expense.amount),
+            incurred_on=expense.incurred_on,
+        )
         for expense in Expense.objects.filter(
             store=store,
             incurred_on__gte=start_date,

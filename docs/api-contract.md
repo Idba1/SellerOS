@@ -72,6 +72,16 @@ The direct response contains the echoed period, `result_state`, `data_completene
 
 An empty response has `products: []` and `result_state: "no_eligible_events_coverage_unknown"`; it does not claim a complete period. Invalid/missing/non-aware/repeated bounds, unknown query parameters, and duplicate delivery evidence return 400/`validation_error` without partial performance rows. **[DECISION REQUIRED]** DR-04, DR-06, DR-07, and AC-01 remain unchanged.
 
+## PROFIT-04 estimated operational profit
+
+`GET /api/v1/profit/summary/` requires token authentication and resolves the owner/active-staff store only from the authenticated account. It requires exactly one each of `start_date` and `end_date` as inclusive ISO `YYYY-MM-DD` store-local business dates. The range cannot be reversed or exceed 366 days. It accepts no store selector, product/customer/category filter, pagination, or mutation input; unknown or repeated query parameters return 400/`validation_error`.
+
+The direct response has `period`, `totals`, `completeness`, `calculation_basis`, and `included_records`. `period` echoes dates, derived timezone-aware half-open instants, and the store timezone. `totals` contains two-decimal BDT strings or `null` for `net_revenue`, `product_cost`, `seller_delivery_cost`, `recorded_operating_cost`, `estimated_operational_profit`, and `estimated_profit_margin_percent`. Profit/margin become `null` if any included order item lacks a product-cost snapshot or any included delivery lacks seller delivery cost; the response provides a stable completeness status and warning rather than substituting zero.
+
+`included_records.order_events` provides opaque event/order IDs, event time, delivery/reversal type, signed revenue/COGS/delivery-cost contributions, pre-expense contribution, and row completeness. `included_records.expenses` provides opaque expense IDs, incurred date, and amount. All records are same-store only. `calculation_basis` states the deterministic formula, snapshot, full-order reversal, expense, rounding, and excluded-component rules. The output is explicitly an estimated operational-profit view, not a tax, cash-flow, payout, or formal accounting statement.
+
+The endpoint has no tax, payment-gateway, customer-paid-shipping, unrecorded courier/cash/shrinkage/return-shipping calculation, product profit ranking, forecast, recommendation, LLM arithmetic, or write operation. Invalid event evidence returns 400/`validation_error` without partial totals.
+
 ## ORDER-05 order reads
 
 `GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
