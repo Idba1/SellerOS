@@ -46,6 +46,14 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 `GET /api/v1/customers/{customer_id}/purchase-history/` accepts no query parameters and returns the current same-store derived summary directly: `purchase_count`, nullable `last_purchase_at`, and two-decimal string `total_spend`. It is calculated at request time from recorded eligible order snapshots; the customer table has no cached count, timestamp, or spend column. A freshly seeded eligible order is reflected by the next request, while returned/refunded orders do not add a current eligible purchase. A missing/foreign ID returns 404/`not_found` without profile or order details. This is read-only; order creation/lifecycle APIs are not part of CUSTOMER-05.
 
+## EXPENSE-02 operating expenses
+
+`GET /api/v1/expenses/` requires token authentication and returns a standard paginated list from only the server-resolved owner/active-staff store. It accepts `page`, `page_size`, case-insensitive exact `category`, inclusive ISO `incurred_from`, and inclusive ISO `incurred_to`. Blank categories, invalid dates, and a start date after the end date return 400/`validation_error`. Rows sort by newest incurred date, then newest creation timestamp and UUID descending. A client cannot use `store_id`, recorder, or another ownership selector.
+
+`POST /api/v1/expenses/` accepts exactly `description`, `category`, positive BDT `amount`, and `incurred_on`; server context supplies the store and the authenticated `recorded_by` account. `GET /api/v1/expenses/{expense_id}/` and `PATCH` on the same path are restricted to the current store. PATCH may change only those four expense data fields; it preserves store ownership and the original recorder. Successful create returns 201 and successful reads/updates return the direct expense representation with opaque ID, description, category, amount, incurred date, and audit timestamps. Foreign/missing IDs are indistinguishable 404/`not_found` responses. There is no delete endpoint.
+
+Closed reporting periods, edits to expenses already included in saved analysis, controlled category taxonomy, and category-level analytics remain **[DECISION REQUIRED]**. This API therefore makes no inferred period lock, allocation, tax, accounting, or automatic profit calculation.
+
 ## ORDER-05 order reads
 
 `GET /api/v1/orders/` requires token authentication and returns only the server-resolved current store's orders in the standard pagination envelope. It accepts one each of `page`, `page_size`, stored `status`, `created_from`, and `created_to`. Status must be one approved stored order enum. The inclusive date filters use ISO `YYYY-MM-DD` against the server-recorded UTC `created_at` operational timestamp; they are not delivery-date financial/analytics grouping. `created_from` cannot follow `created_to`. Results are newest `created_at` first, then UUID descending.
