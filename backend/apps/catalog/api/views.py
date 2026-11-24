@@ -8,10 +8,10 @@ from rest_framework.views import APIView
 
 from core.api.pagination import StandardPagination
 from core.api.query import validate_query_parameters
-from core.permissions import scope_to_authorized_store
+from core.permissions import require_authorized_store, scope_to_authorized_store
 
 from ..models import Product
-from ..serializers import ProductDetailSerializer, ProductSerializer
+from ..serializers import ProductDetailSerializer, ProductSerializer, ProductWriteSerializer
 
 
 PRODUCT_LIST_QUERY_PARAMETERS = {
@@ -74,6 +74,13 @@ class ProductListView(APIView):
         page = paginator.paginate_queryset(products, request, view=self)
         return paginator.get_paginated_response(ProductSerializer(page, many=True).data)
 
+    def post(self, request):
+        store = require_authorized_store(request.user)
+        serializer = ProductWriteSerializer(data=request.data, context={"store": store})
+        serializer.is_valid(raise_exception=True)
+        product = serializer.save()
+        return Response(ProductSerializer(product).data, status=201)
+
 
 class ProductDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -85,3 +92,11 @@ class ProductDetailView(APIView):
         )
         product = get_object_or_404(products, pk=product_id)
         return Response(ProductDetailSerializer(product).data)
+
+    def patch(self, request, product_id):
+        products = scope_to_authorized_store(Product.objects.all(), request.user)
+        product = get_object_or_404(products, pk=product_id)
+        serializer = ProductWriteSerializer(product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_product = serializer.save()
+        return Response(ProductSerializer(updated_product).data)

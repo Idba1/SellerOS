@@ -12,6 +12,8 @@ This supports the approved optional-variant model without creating a second cata
 
 PRODUCT-02 write serializers therefore accept neither `store_id` nor `product_id`. A future authorized product endpoint resolves the current store server-side before creating a product. A future variant endpoint resolves a same-store parent product server-side and supplies it as serializer context. Read representations expose the variant's parent identifier for relationship display, not as permission authority.
 
+PRODUCT-04 adds same-store product creation and partial update only. `is_active=false` is the available deactivation action; no hard delete exists. A product with existing variant rows cannot be changed to `has_variants=false` through this API, because that would contradict the chosen standalone-versus-variant representation. This is an API consistency guard, not a decision about future stock/order-history conversion.
+
 ## Deferred rules
 
 **[DECISION REQUIRED] D-08 / ERD-03:** SKU scope/uniqueness, variant attribute structure, product archive/delete policy beyond the current active flag, variant/stock-unit mapping, and whether/how a product can change `has_variants` after inventory or order history exists.

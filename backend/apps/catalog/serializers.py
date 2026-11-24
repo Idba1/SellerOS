@@ -83,6 +83,21 @@ class ProductWriteSerializer(StrictPayloadModelSerializer):
             raise serializers.ValidationError("Use a nonnegative unit cost or omit it.")
         return value
 
+    def validate(self, attrs):
+        if (
+            self.instance is not None
+            and attrs.get("has_variants") is False
+            and self.instance.variants.exists()
+        ):
+            raise serializers.ValidationError(
+                {
+                    "has_variants": [
+                        "A product with variants cannot be made standalone."
+                    ]
+                }
+            )
+        return attrs
+
     def create(self, validated_data):
         store = self.context.get("store")
         if not isinstance(store, Store):
