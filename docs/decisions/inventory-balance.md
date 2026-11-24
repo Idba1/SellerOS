@@ -10,7 +10,7 @@ INV-01 selects a **cached current balance plus immutable ledger** representation
 
 ## Consistency rule
 
-The balance is not recomputed on every read and no model `save()` mutates it from a movement. A later inventory service must, in one PostgreSQL transaction, lock the stock unit, validate that the resulting balance is nonnegative, insert one valid movement, and update the cached balance. It must reject duplicate `(stock_unit, movement_type, operation_id)` effects. Until that service/API task exists, direct model fixtures may create consistent initial state for tests but are not a seller stock-adjustment workflow.
+The balance is not recomputed on every read and no model `save()` mutates it from a movement. `apps.inventory.services.apply_stock_adjustment` is the supported inventory write path: in one PostgreSQL transaction it locks the stock unit, validates that the resulting balance is nonnegative, inserts one valid movement, and updates the cached balance. It rejects duplicate `(stock_unit, movement_type, operation_id)` effects. Direct model fixtures may create consistent initial state for tests but are not a seller stock-adjustment workflow.
 
 Opening balances are positive; confirmation deductions are negative; cancellation/return restorations are positive; manual adjustments are nonzero and require a reason. Restoration rows reference the original confirmation deduction once. Order-item links remain deferred because order models do not exist yet.
 
