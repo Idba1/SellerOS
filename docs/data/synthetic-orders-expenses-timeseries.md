@@ -1,6 +1,6 @@
 # DATA-03 synthetic order, expense, and time-series fixture
 
-The [DATA-03 manifest](../../data/sample/synthetic-orders-expenses-timeseries.v1.json) is a fully fictional, fixed fixture set labeled `SYNTHETIC DATA — NOT SELLER PERFORMANCE`. It extends the DATA-02 catalog/customer manifest through fixture keys only; it does not seed the database, create an API resource, or constitute seller performance evidence.
+The [DATA-03 manifest](../../data/sample/synthetic-orders-expenses-timeseries.v1.json) is a fully fictional, fixed fixture set labeled `SYNTHETIC DATA — NOT SELLER PERFORMANCE`. It extends the DATA-02 catalog/customer manifest through fixture keys and does not constitute seller performance evidence. EXPENSE-04 uses only its supported delivered-order subset, catalog/customer rows, and categorized expenses in a disposable Django test database; it does not load cancellation, accepted-return, refund, forecast, or analytics scenarios.
 
 ## Included cases
 
@@ -33,4 +33,4 @@ The manifest deliberately avoids or defers:
 - DR-08 snapshot-edit timing; and
 - DATA-01-R1 persistent demo retention/reset approval.
 
-The only executable check is the database-independent fixture validation test. A later product/order/inventory implementation must add its own PostgreSQL/API seed and cross-store tests before loading these values into a database.
+The database-independent fixture validation test remains. EXPENSE-04 additionally verifies a PostgreSQL test-only seed/reset command for the supported subset. Persistent local-demo seeding remains blocked by DATA-01-R1.

@@ -38,13 +38,13 @@ Do not label a live API response as synthetic unless its underlying database was
 
 ### Current implementation
 
-The only existing synthetic record builders are the deterministic account/store factories in `backend/tests/factories/`. Django tests create a disposable PostgreSQL test database, apply migrations, and destroy that database after the test run. This is the only approved reset mechanism today.
+The deterministic account/store factories in `backend/tests/factories/` and the test-only `seed_demo_data --reset` management command are the current synthetic record builders. Django tests create a disposable PostgreSQL test database, apply migrations, and destroy that database after the test run. The command refuses every database unless `DEBUG=True` and its database name starts with `test_`; it also requires the explicit `--reset` flag. It loads only the reviewed supported subset of the DATA-02/DATA-03 manifests and prints `SYNTHETIC DATA — NOT SELLER PERFORMANCE` without credentials or customer-like free text.
 
-There is no application demo seed command, production import path, or persistent demo database. `data/sample/` contains reviewed static DATA-02 catalog/customer and DATA-03 order/expense/time-series manifests plus a README; `backend/tests/ai_cases/` contains the DATA-04 evaluation-case manifest. None is database-loaded or an API data source. No task may treat a fixture file as authorization to load records.
+There is no production import path or persistent demo database. `data/sample/` contains reviewed static DATA-02 catalog/customer and DATA-03 order/expense/time-series manifests plus a README; `backend/tests/ai_cases/` contains the DATA-04 evaluation-case manifest. The command does not load cancellation, accepted-return, refund, forecast, or analytics fixture cases whose workflows remain incomplete.
 
-### Future seed-command design (not implemented)
+### Future persistent-demo seed design (not implemented)
 
-A later approved management command may load a reviewed synthetic manifest only when all of the following are true:
+A later approved command for a persistent local-demo target may load a reviewed synthetic manifest only when all of the following are true:
 
 1. The operator explicitly selects a known disposable local/demo target; the command must refuse an unrecognized or production-designated target.
 2. The manifest states `synthetic` provenance and passes schema/provenance validation before any write.
@@ -52,7 +52,7 @@ A later approved management command may load a reviewed synthetic manifest only 
 4. The command prints a synthetic-data warning and creates an auditable manifest reference, but never logs credentials, tokens, customer-like free text, or secrets.
 5. Reset is a separate explicit operation, never an implicit side effect of normal seeding.
 
-No command name, flags, destructive mechanism, or persistent storage target is approved by this document. Implementing one requires the retention/reset decision below and a dedicated data task.
+No persistent-target command name, flags, destructive mechanism, or storage target is approved by this document. Implementing one requires the retention/reset decision below and a dedicated data task.
 
 ## 4. Reset and retention
 
@@ -60,6 +60,7 @@ No command name, flags, destructive mechanism, or persistent storage target is a
 | --- | --- |
 | Automated Django tests | Use the disposable PostgreSQL test database created and destroyed by the test runner. Do not point tests at a shared or production database. |
 | Source-controlled factories/manifests | Retain only fictional source definitions and metadata; never retain generated database dumps, raw exports, tokens, credentials, or customer-like free text. |
+| Disposable Django test database | `seed_demo_data --reset` may rebuild only the supported synthetic graph when `DEBUG=True` and the database name begins `test_`. It never runs against a local, shared, or production database. |
 | Local demo database | No persistent seed/reset workflow is approved yet. Do not load or reset it automatically. |
 | Screenshots/evaluation evidence | Retain only clearly labeled synthetic, minimized evidence. Never include secrets, raw authorization headers, or real-person details. |
 
@@ -93,6 +94,6 @@ Future product/order/inventory/analytics tasks may add only the fixtures their a
 
 ## 8. Policy verification evidence
 
-Policy review was performed against [the PLAN-06 data/provider decision](decisions/data-and-provider.md), [shared factory guidance](testing/factories.md), [current factory code](../backend/tests/factories/accounts.py), current `.gitignore`, and `data/sample/README.md`. The repository currently contains factory code and documentation but no seed command or sample dataset.
+Policy review was performed against [the PLAN-06 data/provider decision](decisions/data-and-provider.md), [shared factory guidance](testing/factories.md), [current factory code](../backend/tests/factories/accounts.py), the test-only seed command, current `.gitignore`, and `data/sample/README.md`. The repository contains source-controlled manifests and a test-only reset command, but no persistent demo seed or production import path.
 
 Verification for this documentation task checks that this policy states the synthetic-only provenance rule, production-export prohibition, labeling metadata, current test reset boundary, persistent-reset decision gate, and pre-load review checklist. It does not establish that all Git history, local databases, backups, or machines are free of sensitive data.

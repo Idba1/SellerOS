@@ -4,7 +4,7 @@
   "provenance": "synthetic",
   "label": "SYNTHETIC DATA — NOT SELLER PERFORMANCE",
   "determinism": "Hand-authored fixed manifest; fixture_revision identifies this exact repeatable set.",
-  "schema_status": "Manifest only. SalesOrder, OrderItem, Expense, inventory, and analytics models/APIs are not implemented yet.",
+  "schema_status": "Reviewed source manifest. The test-only seed command loads only the supported delivered-order subset; cancellation, return, refund, and analytics cases remain fixture-only until their workflows are implemented.",
   "catalog_fixture_id": "selleros-synthetic-catalog-customers-v1",
   "currency_code": "BDT",
   "order_cases": [
@@ -174,6 +174,7 @@
       "fixture_key": "expense-a-market-table",
       "store_key": "synthetic-store-a",
       "description": "Synthetic market-table fee",
+      "category": "Sales channel",
       "amount": "250.00",
       "incurred_on": "2026-01-03"
     },
@@ -181,6 +182,7 @@
       "fixture_key": "expense-a-packaging",
       "store_key": "synthetic-store-a",
       "description": "Synthetic packaging batch",
+      "category": "Packaging",
       "amount": "120.00",
       "incurred_on": "2026-03-01"
     },
@@ -188,6 +190,7 @@
       "fixture_key": "expense-b-display",
       "store_key": "synthetic-store-b",
       "description": "Synthetic display fee",
+      "category": "Sales channel",
       "amount": "150.00",
       "incurred_on": "2025-10-01"
     }

@@ -4,7 +4,7 @@
   "provenance": "synthetic",
   "label": "SYNTHETIC DATA — NOT SELLER PERFORMANCE",
   "determinism": "Hand-authored fixed manifest; fixture_revision identifies this exact repeatable set.",
-  "schema_status": "Manifest only. Product, ProductVariant, Customer, and sales-order models/APIs are not implemented yet.",
+  "schema_status": "Reviewed source manifest. The test-only seed command loads catalog/customer rows; customer-history stubs remain fixture-only until their derived-history scenarios are explicitly seeded.",
   "currency_code": "BDT",
   "stores": [
     {

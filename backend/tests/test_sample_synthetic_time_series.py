@@ -136,6 +136,7 @@ class SyntheticOrderExpenseTimeSeriesFixtureTests(SimpleTestCase):
         for expense in self.fixture["expense_records"]:
             self.assertNotIn(expense["fixture_key"], expense_keys)
             expense_keys.add(expense["fixture_key"])
+            self.assertTrue(expense["category"].strip())
             self.assertGreater(Decimal(expense["amount"]), Decimal("0.00"))
             datetime.fromisoformat(expense["incurred_on"])
 
