@@ -34,7 +34,7 @@ The dashboard filter is inclusive store-local `start_date` / `end_date` (`YYYY-M
 | Product sales table | `GET /api/v1/analytics/product-performance/`; product ID, delivered units, delivered gross sales | Count and BDT; selected delivery-event period | Show documented no-eligible-events state. It is descriptive sales data, not product profit, recommendation, or forecast. |
 | Calculation-basis disclosure | Profit summary `calculation_basis` and `completeness.warnings` | Text, same selected period | Always visible beside/under profit value; identifies exclusions and estimate boundary. |
 | Daily revenue chart | No approved endpoint | Not available | Render an explicit unavailable state. Do not derive a chart from aggregate totals or synthetic values in a live dashboard. |
-| Low-stock attention count | No approved aggregate/filter contract | Not available | Render an explicit unavailable state. Do not infer a threshold or count from an arbitrary inventory page. |
+| Low-stock attention count | `GET /api/v1/analytics/dashboard/`; existing `StockUnit.is_low_stock` values | Count; current stock, not period sales | Show only configured-threshold units. A missing threshold is not low stock. |
 
 ## Frontend response types
 
