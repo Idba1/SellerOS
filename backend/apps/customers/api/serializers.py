@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.accounts.models import Store
 from apps.customers.models import Customer
+from apps.customers.services import CustomerPurchaseHistory
 
 
 class StrictCustomerPayloadSerializer(serializers.ModelSerializer):
@@ -87,3 +88,14 @@ class CustomerWriteSerializer(StrictCustomerPayloadSerializer):
         except DjangoValidationError as error:
             raise serializers.ValidationError(error.message_dict) from error
         return instance
+
+
+class CustomerPurchaseHistorySerializer(serializers.Serializer):
+    """Stable read-only representation of derived purchase facts."""
+
+    purchase_count = serializers.IntegerField(read_only=True)
+    last_purchase_at = serializers.DateTimeField(read_only=True, allow_null=True)
+    total_spend = serializers.SerializerMethodField()
+
+    def get_total_spend(self, history: CustomerPurchaseHistory):
+        return f"{history.total_spend:.2f}"

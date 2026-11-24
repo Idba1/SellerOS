@@ -44,6 +44,8 @@ List rows serialize product catalogue fields only. Detail reads use the same sco
 
 `GET /api/v1/customers/{customer_id}/` reads one same-store profile. `POST /api/v1/customers/` creates a profile for the server-resolved store and returns it with 201. `PATCH /api/v1/customers/{customer_id}/` partially updates only a same-store profile and returns it with 200. Write payloads accept exactly `display_name`, optional `phone`, and optional `email`; the server rejects store/owner fields and unknown fields. Names must be non-blank; blank optional contact values normalize to `null`; email syntax is validated. Same-store duplicate contacts are permitted: this version has no contact matching, merge, delivery, search, or deletion operation. Missing/foreign detail IDs return indistinguishable 404/`not_found` responses.
 
+`GET /api/v1/customers/{customer_id}/purchase-history/` accepts no query parameters and returns the current same-store derived summary directly: `purchase_count`, nullable `last_purchase_at`, and two-decimal string `total_spend`. It is calculated at request time from recorded eligible order snapshots; the customer table has no cached count, timestamp, or spend column. A freshly seeded eligible order is reflected by the next request, while returned/refunded orders do not add a current eligible purchase. A missing/foreign ID returns 404/`not_found` without profile or order details. This is read-only; order creation/lifecycle APIs are not part of CUSTOMER-05.
+
 ## Success and pagination
 
 Detail/create/update success returns the serialized resource directly, with no success wrapper. Future collection APIs use StandardPagination (DRF generic-view default): page-number pagination, default 20, optional page_size integer 1–100. List shape:

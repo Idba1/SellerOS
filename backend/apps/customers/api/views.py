@@ -7,11 +7,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.customers.models import Customer
+from apps.customers.services import get_customer_purchase_history
 from core.api.pagination import StandardPagination
 from core.api.query import validate_query_parameters
 from core.permissions import require_authorized_store, scope_to_authorized_store
 
-from .serializers import CustomerSerializer, CustomerWriteSerializer
+from .serializers import (
+    CustomerPurchaseHistorySerializer,
+    CustomerSerializer,
+    CustomerWriteSerializer,
+)
 
 
 PAGINATION_QUERY_PARAMETERS = {"page", "page_size"}
@@ -55,3 +60,14 @@ class CustomerDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         updated_customer = serializer.save()
         return Response(CustomerSerializer(updated_customer).data)
+
+
+class CustomerPurchaseHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, customer_id):
+        validate_query_parameters(request.query_params, set())
+        customers = scope_to_authorized_store(Customer.objects.all(), request.user)
+        customer = get_object_or_404(customers, pk=customer_id)
+        history = get_customer_purchase_history(customer)
+        return Response(CustomerPurchaseHistorySerializer(history).data)
