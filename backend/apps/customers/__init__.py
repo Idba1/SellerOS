@@ -1,0 +1,1 @@
+"""Seller-owned customer records."""
