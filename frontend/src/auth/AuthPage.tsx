@@ -51,7 +51,10 @@ export function AuthenticationPage({ mode: initialMode = 'login' }: { mode?: Aut
     try {
       const session = mode === 'login' ? await login(email, password) : await register(email, password)
       saveAuthSession(session)
-      window.location.assign(mode === 'register' ? '/store/setup' : '/')
+      // Both new and existing accounts pass through the authorized store gate.
+      // It shows setup only when the account has no accessible store; otherwise
+      // it confirms the current profile and offers the dashboard continuation.
+      window.location.assign('/store/setup')
     } catch (error) {
       setSubmitError(messageFromAuthError(error))
     } finally {
