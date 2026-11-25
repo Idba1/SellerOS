@@ -103,6 +103,42 @@ class InventoryApiTests(APITestCase):
         self.assertEqual(self.stock_unit_a.quantity_on_hand, 3)
         self.assertEqual(self.stock_unit_a.movements.count(), 2)
 
+    def test_opening_balance_and_threshold_are_store_scoped_and_one_time(self):
+        fresh = self.create_stock_unit(
+            self.graph_a.store,
+            name="Fresh Stock Tote",
+            quantity_on_hand=0,
+        )
+        self.authenticate(self.graph_a.owner)
+
+        threshold_response = self.client.patch(
+            reverse("inventory-detail", args=[fresh.pk]),
+            {"low_stock_threshold": 3},
+            format="json",
+        )
+        opening_response = self.client.post(
+            reverse("inventory-opening-balance", args=[fresh.pk]),
+            {"quantity": 8},
+            format="json",
+        )
+        repeat_response = self.client.post(
+            reverse("inventory-opening-balance", args=[fresh.pk]),
+            {"quantity": 1},
+            format="json",
+        )
+
+        self.assertEqual(threshold_response.status_code, 200)
+        self.assertEqual(threshold_response.data["low_stock_threshold"], 3)
+        self.assertEqual(opening_response.status_code, 201)
+        self.assertEqual(
+            opening_response.data["movement_type"],
+            InventoryMovement.MovementType.OPENING_BALANCE,
+        )
+        self.assertEqual(repeat_response.status_code, 400)
+        fresh.refresh_from_db()
+        self.assertEqual(fresh.quantity_on_hand, 8)
+        self.assertEqual(fresh.movements.count(), 1)
+
     def test_validation_rejects_invalid_manual_payload_without_changes(self):
         self.authenticate(self.graph_a.owner)
         url = reverse("inventory-manual-adjustment", args=[self.stock_unit_a.pk])

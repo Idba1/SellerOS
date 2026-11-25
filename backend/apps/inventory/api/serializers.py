@@ -85,3 +85,17 @@ class ManualStockAdjustmentSerializer(StrictPayloadSerializer):
         if not value:
             raise serializers.ValidationError("A manual adjustment requires a reason.")
         return value
+
+
+class OpeningBalanceSerializer(StrictPayloadSerializer):
+    """Accept the one-time initial positive balance for a new stock unit."""
+
+    quantity = serializers.IntegerField(min_value=1)
+
+
+class StockUnitSettingsSerializer(StrictPayloadSerializer):
+    """Allow a seller to set or clear only their own low-stock threshold."""
+
+    low_stock_threshold = serializers.IntegerField(
+        min_value=0, required=False, allow_null=True
+    )

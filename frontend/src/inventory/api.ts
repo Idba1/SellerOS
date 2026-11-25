@@ -36,6 +36,11 @@ function isStockUnit(value: unknown): value is StockUnit {
     && 'updated_at' in value && typeof value.updated_at === 'string'
 }
 
+export function decodeStockUnit(value: unknown): StockUnit {
+  if (!isStockUnit(value)) throw new Error('Invalid inventory stock-unit response.')
+  return value
+}
+
 function isMovement(value: unknown): value is InventoryMovement {
   return value !== null && typeof value === 'object'
     && 'id' in value && typeof value.id === 'string'

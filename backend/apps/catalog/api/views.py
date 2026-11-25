@@ -1,4 +1,5 @@
 """Store-scoped, read-only catalogue endpoints."""
+from django.db import transaction
 from django.db.models.functions import Lower
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -9,6 +10,8 @@ from rest_framework.views import APIView
 from core.api.pagination import StandardPagination
 from core.api.query import validate_query_parameters
 from core.permissions import require_authorized_store, scope_to_authorized_store
+
+from apps.inventory.models import StockUnit
 
 from ..models import Product
 from ..serializers import ProductDetailSerializer, ProductSerializer, ProductWriteSerializer
@@ -78,7 +81,13 @@ class ProductListView(APIView):
         store = require_authorized_store(request.user)
         serializer = ProductWriteSerializer(data=request.data, context={"store": store})
         serializer.is_valid(raise_exception=True)
-        product = serializer.save()
+        # Every standalone catalogue product gets a zero-balance stock unit so
+        # the seller can immediately record its opening stock in Inventory.
+        # Variant products receive units only after their variants exist.
+        with transaction.atomic():
+            product = serializer.save()
+            if not product.has_variants:
+                StockUnit.objects.create(store=store, product=product)
         return Response(ProductSerializer(product).data, status=201)
 
 

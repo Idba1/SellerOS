@@ -17,7 +17,9 @@ from core.permissions import scope_to_authorized_store
 from .serializers import (
     InventoryMovementSerializer,
     ManualStockAdjustmentSerializer,
+    OpeningBalanceSerializer,
     StockUnitSerializer,
+    StockUnitSettingsSerializer,
 )
 
 
@@ -86,3 +88,44 @@ class ManualStockAdjustmentView(APIView):
             InventoryMovementSerializer(movement).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class StockUnitDetailView(APIView):
+    """Update the seller-configured threshold without accepting ownership data."""
+
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, stock_unit_id):
+        validate_query_parameters(request.query_params, set())
+        stock_unit = get_store_stock_unit_or_404(request.user, stock_unit_id)
+        serializer = StockUnitSettingsSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if not serializer.validated_data:
+            raise ValidationError({"low_stock_threshold": ["Supply a threshold or null."]})
+        stock_unit.low_stock_threshold = serializer.validated_data["low_stock_threshold"]
+        stock_unit.save(update_fields={"low_stock_threshold", "updated_at"})
+        return Response(StockUnitSerializer(stock_unit).data)
+
+
+class OpeningBalanceView(APIView):
+    """Record a one-time opening balance for a brand-new zero-balance unit."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, stock_unit_id):
+        validate_query_parameters(request.query_params, set())
+        stock_unit = get_store_stock_unit_or_404(request.user, stock_unit_id)
+        serializer = OpeningBalanceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if stock_unit.quantity_on_hand != 0 or stock_unit.movements.exists():
+            raise ValidationError({"quantity": ["Opening balance is available only before stock activity begins."]})
+        try:
+            movement = apply_stock_adjustment(
+                stock_unit_id=stock_unit.pk,
+                movement_type=InventoryMovement.MovementType.OPENING_BALANCE,
+                quantity_delta=serializer.validated_data["quantity"],
+                created_by=request.user,
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(error.message_dict) from error
+        return Response(InventoryMovementSerializer(movement).data, status=status.HTTP_201_CREATED)

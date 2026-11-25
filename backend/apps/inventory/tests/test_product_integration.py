@@ -32,14 +32,13 @@ class ProductInventoryIntegrationTests(APITestCase):
         return Product.objects.get(pk=response.data["id"])
 
     def provision_stock_unit_for_test(self, product, *, quantity_on_hand=5):
-        """INV-04 is absent; establish the existing required relation as a fixture."""
+        """Use the unit automatically created with a standalone catalogue product."""
 
-        return StockUnit.objects.create(
-            store=self.graph.store,
-            product=product,
-            quantity_on_hand=quantity_on_hand,
-            low_stock_threshold=2,
-        )
+        stock_unit = StockUnit.objects.get(store=self.graph.store, product=product)
+        stock_unit.quantity_on_hand = quantity_on_hand
+        stock_unit.low_stock_threshold = 2
+        stock_unit.save()
+        return stock_unit
 
     def test_catalogue_created_and_renamed_product_is_current_in_inventory_list(self):
         product = self.create_product_via_catalogue_api()
@@ -66,6 +65,14 @@ class ProductInventoryIntegrationTests(APITestCase):
         self.assertEqual(row["product_name"], "Renamed Tote")
         self.assertEqual(row["quantity_on_hand"], 5)
         self.assertEqual(row["low_stock_threshold"], 2)
+
+    def test_catalogue_created_standalone_product_has_zero_balance_stock_unit(self):
+        product = self.create_product_via_catalogue_api(name="Auto Stock Tote")
+
+        stock_unit = StockUnit.objects.get(store=self.graph.store, product=product)
+
+        self.assertEqual(stock_unit.quantity_on_hand, 0)
+        self.assertIsNone(stock_unit.low_stock_threshold)
 
     def test_inventory_adjustment_and_history_agree_for_catalogue_product(self):
         product = self.create_product_via_catalogue_api(name="Adjustment Tote")

@@ -9,10 +9,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.orders.models import SalesOrder
+from apps.orders.serializers import OrderCreateSerializer
+from apps.orders.services import OrderConfirmationError, create_and_confirm_order
 from apps.orders.services import transition_order_status
 from core.api.pagination import StandardPagination
 from core.api.query import validate_query_parameters
-from core.permissions import scope_to_authorized_store
+from core.permissions import require_authorized_store, scope_to_authorized_store
 
 from .serializers import (
     OrderDetailSerializer,
@@ -65,6 +67,19 @@ class OrderListView(APIView):
         paginator = StandardPagination()
         page = paginator.paginate_queryset(orders, request, view=self)
         return paginator.get_paginated_response(OrderSerializer(page, many=True).data)
+
+    def post(self, request):
+        """Create and confirm a server-priced order in one atomic operation."""
+
+        validate_query_parameters(request.query_params, set())
+        store = require_authorized_store(request.user)
+        serializer = OrderCreateSerializer(data=request.data, context={"store": store})
+        serializer.is_valid(raise_exception=True)
+        try:
+            order = create_and_confirm_order(serializer=serializer, created_by=request.user)
+        except OrderConfirmationError as error:
+            raise ValidationError(error.message_dict) from error
+        return Response(OrderDetailSerializer(order).data, status=201)
 
 
 class OrderDetailView(APIView):

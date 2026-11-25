@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 from apps.catalog.models import Product
 from apps.customers.models import Customer
 from apps.orders.models import OrderItem, SalesOrder
+from apps.inventory.models import StockUnit
 from tests.factories import FactoryContext, create_store_graph
 
 
@@ -141,3 +142,27 @@ class OrderReadApiTests(APITestCase):
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(response.data["error"]["code"], "validation_error")
                 self.assertIn(field, response.data["error"]["details"])
+
+    def test_owner_can_create_confirmed_order_and_stock_is_deducted(self):
+        StockUnit.objects.create(
+            store=self.graph_a.store,
+            product=self.product_a,
+            quantity_on_hand=3,
+        )
+        self.authenticate(self.graph_a.owner)
+
+        response = self.client.post(
+            self.list_url,
+            {
+                "customer_id": str(self.customer_a.pk),
+                "items": [{"product_id": str(self.product_a.pk), "quantity": 2}],
+                "order_discount": "5.00",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["status"], SalesOrder.Status.CONFIRMED)
+        self.assertEqual(response.data["items"][0]["quantity"], 2)
+        stock = StockUnit.objects.get(store=self.graph_a.store, product=self.product_a)
+        self.assertEqual(stock.quantity_on_hand, 1)
