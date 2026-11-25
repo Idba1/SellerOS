@@ -47,6 +47,20 @@ See the [root guide](../README.md#local-setup-and-run--setup-07). From frontend 
 
 Clean dependency rehearsal, 6 October 2026: initial `npm ci --prefix frontend` failed with EPERM on a locked lightningcss native file. Subsequent checks failed because that interrupted install had removed tools. Port/process inspection located the earlier SellerOS Vite server on 5173; stopping that specific process required elevated execution after access denied. Once stopped, `npm ci --prefix frontend` succeeded (84 packages, zero audit vulnerabilities), `npm run typecheck --prefix frontend` passed and `npm run build --prefix frontend` passed. Do not reinstall while a server holds native modules open; do not stop unrelated processes.
 
+## Local authenticated browser flow
+
+For local sign-in and all browser API requests, keep Django running on `127.0.0.1:8000` and Vite on `127.0.0.1:5173`. The ignored `.env.local` sets the public API base URL to `http://127.0.0.1:5173/api/v1/`; Vite forwards `/api` to Django. This keeps browser requests same-origin during local development and does not relax Django's server-side token or store authorization.
+
+```powershell
+# Terminal 1, repository root
+& backend/.venv/Scripts/python.exe backend/manage.py runserver 127.0.0.1:8000
+
+# Terminal 2, repository root
+npm run dev --prefix frontend -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Open `http://127.0.0.1:5173/login`, use **Create account** for a new local seller, then create the first store profile. Existing accounts use **Sign in**. Restart Vite after changing `.env.local` or `vite.config.ts`. The proxy is for local Vite development only; a deployment must configure its own approved API URL and CORS policy.
+
 The live rehearsal launched Vite's CLI (the same entry point as npm's dev script) with the documented host/port/strictPort arguments, verified HTTP 200, and used bundled Playwright with installed Edge to assert the shell heading and no console/page errors. The supervisor terminated/waited for its server process in `finally`. No new browser/test package was added. Both live rehearsal servers stopped; no claim of a clean-OS or independent student test is made. Next task: BACKEND-01, only when authorized.
 
 ## Shared API transport — FRONTEND-02 (14 October 2026)
