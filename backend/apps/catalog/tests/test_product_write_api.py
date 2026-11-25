@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 from apps.catalog.models import Product, ProductVariant
+from apps.inventory.models import StockUnit
 from tests.factories import FactoryContext, create_store_graph
 
 
@@ -59,6 +60,9 @@ class ProductWriteApiTests(APITestCase):
         self.assertEqual(product.store, self.graph_a.store)
         self.assertEqual(product.name, "Created Product")
         self.assertEqual(product.category, "Carry goods")
+        stock_unit = StockUnit.objects.get(product=product)
+        self.assertEqual(stock_unit.store, self.graph_a.store)
+        self.assertEqual(stock_unit.quantity_on_hand, 0)
         self.assertNotIn("store", response.data)
         self.assertNotIn("store_id", response.data)
 
@@ -125,3 +129,18 @@ class ProductWriteApiTests(APITestCase):
         self.assertEqual(update_response.status_code, 401)
         self.assertEqual(create_response.data["error"]["code"], "not_authenticated")
         self.assertEqual(update_response.data["error"]["code"], "not_authenticated")
+
+    def test_owner_adds_variant_and_receives_zero_balance_variant_stock_unit(self):
+        self.authenticate(self.graph_a.owner)
+
+        response = self.client.post(
+            reverse("product-variant-list", args=[self.variant_product.id]),
+            {"name": "Navy", "is_active": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        variant = ProductVariant.objects.get(pk=response.data["id"])
+        stock_unit = StockUnit.objects.get(product=self.variant_product, variant=variant)
+        self.assertEqual(stock_unit.store, self.graph_a.store)
+        self.assertEqual(stock_unit.quantity_on_hand, 0)

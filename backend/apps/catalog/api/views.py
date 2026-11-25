@@ -13,8 +13,14 @@ from core.permissions import require_authorized_store, scope_to_authorized_store
 
 from apps.inventory.models import StockUnit
 
-from ..models import Product
-from ..serializers import ProductDetailSerializer, ProductSerializer, ProductWriteSerializer
+from ..models import Product, ProductVariant
+from ..serializers import (
+    ProductDetailSerializer,
+    ProductSerializer,
+    ProductVariantSerializer,
+    ProductVariantWriteSerializer,
+    ProductWriteSerializer,
+)
 
 
 PRODUCT_LIST_QUERY_PARAMETERS = {
@@ -109,3 +115,29 @@ class ProductDetailView(APIView):
         serializer.is_valid(raise_exception=True)
         updated_product = serializer.save()
         return Response(ProductSerializer(updated_product).data)
+
+
+class ProductVariantListView(APIView):
+    """Create variant stock units only inside the product's authorized store."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, product_id):
+        validate_query_parameters(request.query_params, set())
+        product = get_object_or_404(
+            scope_to_authorized_store(Product.objects.all(), request.user),
+            pk=product_id,
+        )
+        serializer = ProductVariantWriteSerializer(
+            data=request.data,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            variant = serializer.save()
+            StockUnit.objects.create(
+                store=product.store,
+                product=product,
+                variant=variant,
+            )
+        return Response(ProductVariantSerializer(variant).data, status=201)

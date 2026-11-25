@@ -23,6 +23,8 @@ export type ProductDetail = Product & {
   }>
 }
 
+export type ProductVariant = ProductDetail['variants'][number]
+
 export type ProductPayload = Pick<Product, 'name' | 'category' | 'selling_price' | 'unit_cost' | 'has_variants' | 'is_active'>
 
 function isProduct(value: unknown): value is Product {
@@ -55,6 +57,17 @@ export function decodeProductDetail(value: unknown): ProductDetail {
     throw new Error('Invalid product detail response.')
   }
   return value as ProductDetail
+}
+
+export function decodeProductVariant(value: unknown): ProductVariant {
+  if (value === null || typeof value !== 'object'
+    || !('id' in value) || typeof value.id !== 'string'
+    || !('product_id' in value) || typeof value.product_id !== 'string'
+    || !('name' in value) || typeof value.name !== 'string'
+    || !('is_active' in value) || typeof value.is_active !== 'boolean'
+    || !('created_at' in value) || typeof value.created_at !== 'string'
+    || !('updated_at' in value) || typeof value.updated_at !== 'string') throw new Error('Invalid product variant response.')
+  return value as ProductVariant
 }
 
 export function decodeProductPage(value: unknown): PaginatedResponse<Product> {
