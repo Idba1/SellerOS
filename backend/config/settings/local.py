@@ -15,3 +15,7 @@ if _debug not in {"true", "false"}:
     raise ImproperlyConfigured("DJANGO_DEBUG must be true or false.")
 DEBUG = _debug == "true"
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
+# Recovery emails remain local by default: Django prints the time-limited link
+# to the runserver terminal. Deployments retain SMTP from base settings.
+if os.environ.get("SELLEROS_EMAIL_BACKEND", "console").strip().lower() == "console":
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

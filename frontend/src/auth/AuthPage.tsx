@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { TextField } from '../components/FormFields'
-import { login, messageFromAuthError, register } from './api'
-import { saveAuthSession } from './session'
+import { confirmPasswordReset, login, messageFromAuthError, register, requestPasswordReset } from './api'
+import { clearAuthSession, saveAuthSession } from './session'
 
 type AuthMode = 'login' | 'register'
 
@@ -85,15 +85,85 @@ export function AuthenticationPage({ mode: initialMode = 'login' }: { mode?: Aut
     </div>
   </AuthFrame>
 }
+export function PasswordRecoveryPage() {
+  const [email, setEmail] = useState('')
+  const [attempted, setAttempted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [confirmation, setConfirmation] = useState<string | null>(null)
+  const emailError = !email.trim() ? 'Enter your email address.' : !/^\S+@\S+\.\S+$/.test(email) ? 'Enter a valid email address.' : undefined
 
-export function PasswordRecoveryUnavailable({ reset = false }: { reset?: boolean }) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setAttempted(true)
+    if (emailError) return
+    setLoading(true)
+    setSubmitError(null)
+    try {
+      setConfirmation(await requestPasswordReset(email))
+    } catch (error) {
+      setSubmitError(messageFromAuthError(error))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return <AuthFrame>
-    <div className="auth-card auth-unavailable-card">
-      <p className="eyebrow">SELLER ACCESS</p>
-      <h2>{reset ? 'Set a new password' : 'Forgot your password?'}</h2>
-      <p>Password recovery is not available in this prototype because SellerOS has no approved reset or email-verification service yet.</p>
-      <p className="auth-unavailable-note">This page deliberately does not collect an email address or a new password: no recovery action could be completed safely.</p>
-      <a className="button auth-submit" href="/login">Back to sign in</a>
+    <div className="auth-card">
+      <div className="auth-card-heading"><p className="eyebrow">SELLER ACCESS</p><h2>Forgot your password?</h2><p>Enter your account email and we will send a password-reset link if the account is active.</p></div>
+      {confirmation ? <div className="auth-success" role="status"><p>{confirmation}</p><p>For local development, check the backend terminal for the generated link.</p></div> : <>
+        {submitError ? <p className="auth-error" role="alert">{submitError}</p> : null}
+        <form className="auth-form" onSubmit={submit} noValidate>
+          <TextField label="Email address" name="email" type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} error={attempted ? emailError : undefined} required />
+          <button className="button auth-submit" type="submit" disabled={loading}>{loading ? 'Sending link…' : 'Send reset link'}</button>
+        </form>
+      </>}
+      <a className="auth-recovery-link" href="/login">Back to sign in</a>
+    </div>
+  </AuthFrame>
+}
+export function PasswordResetPage() {
+  const parameters = new URLSearchParams(window.location.search)
+  const uid = parameters.get('uid')
+  const token = parameters.get('token')
+  const [password, setPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [attempted, setAttempted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const passwordError = password.length < 12 ? 'Use at least 12 characters.' : undefined
+  const confirmationError = confirmation !== password ? 'Passwords do not match.' : undefined
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setAttempted(true)
+    if (!uid || !token || passwordError || confirmationError) return
+    setLoading(true)
+    setSubmitError(null)
+    try {
+      const detail = await confirmPasswordReset(uid, token, password)
+      clearAuthSession()
+      setSuccess(detail)
+    } catch (error) {
+      setSubmitError(messageFromAuthError(error))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return <AuthFrame>
+    <div className="auth-card">
+      <div className="auth-card-heading"><p className="eyebrow">SELLER ACCESS</p><h2>Set a new password</h2><p>Your new password will sign out existing SellerOS browser sessions.</p></div>
+      {!uid || !token ? <div className="auth-error" role="alert">This password reset link is incomplete or invalid.</div> : success ? <div className="auth-success" role="status"><p>{success}</p></div> : <>
+        {submitError ? <p className="auth-error" role="alert">{submitError}</p> : null}
+        <form className="auth-form" onSubmit={submit} noValidate>
+          <TextField label="New password" name="password" type="password" autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} error={attempted ? passwordError : undefined} helpText="Use at least 12 characters. A numeric-only password is not accepted." required />
+          <TextField label="Confirm new password" name="confirmation" type="password" autoComplete="new-password" value={confirmation} onChange={event => setConfirmation(event.target.value)} error={attempted ? confirmationError : undefined} required />
+          <button className="button auth-submit" type="submit" disabled={loading}>{loading ? 'Resetting password…' : 'Reset password'}</button>
+        </form>
+      </>}
+      <a className="auth-recovery-link" href="/login">Back to sign in</a>
     </div>
   </AuthFrame>
 }

@@ -1,6 +1,6 @@
 # SellerOS API conventions — BACKEND-05
 
-10 October 2026, updated for AUTH-01. This contract defines transport conventions, not business fields/endpoints. Existing public `/health/` and `/ready/` retain their separate probe payloads. AUTH-01 registers only account registration, token login, and current-account validation routes; no product or order route exists. Existing direct-success and error-envelope behavior is preserved.
+10 October 2026, updated for authentication and password recovery. This contract defines transport conventions, not business fields/endpoints. Existing public `/health/` and `/ready/` retain their separate probe payloads. Existing direct-success and error-envelope behavior is preserved.
 
 ## Version and naming
 
@@ -11,6 +11,10 @@ Future business APIs use `/api/v1/`, trailing slash, lowercase plural resource n
 `POST /api/v1/auth/register/` and `POST /api/v1/auth/login/` are public JSON-only endpoints. Successful responses directly return `{"account":{"id":"<opaque UUID>","email":"..."},"token":"<opaque bearer token>"}` with 201 or 200 respectively. `GET /api/v1/auth/me/` requires `Authorization: Token <token>` and directly returns `{"id":"<opaque UUID>","email":"..."}`. These endpoints do not create stores or confer store access.
 
 Auth validation errors use the established envelope. Duplicate registration is 400/`validation_error`; unknown email, wrong password, and inactive account are 401/`authentication_failed` with the same generic detail; missing token on `/me/` is 401/`not_authenticated`. AUTH-01's IP/cache-backed limits are registration 3/hour and login 5/minute; see [authentication setup](setup/authentication.md) for validation and token-lifecycle boundaries.
+
+`POST /api/v1/auth/password-reset/` is public and accepts `{"email":"..."}`. It always returns 202 with `{"detail":"If an active account matches this email, a reset link has been sent."}` after valid email syntax, whether or not the account exists. This prevents account enumeration. It is throttled to 3/hour. For a matching active account, the server sends a time-limited Django-signed link to the configured `/reset-password` frontend URL. In local development, that link is printed to the backend terminal; approved production deployment must configure SMTP through environment variables.
+
+`POST /api/v1/auth/password-reset/confirm/` is public and accepts exactly `{"uid":"...","token":"...","password":"..."}`. A valid active account, unexpired token, and password satisfying the existing password validators return 200 with a confirmation detail. The update invalidates the link through the changed password hash and revokes all existing API tokens for that account. Invalid, expired, replayed, or inactive-account links return 400/`validation_error` without revealing account details.
 
 ## AUTH-02 store-profile route
 

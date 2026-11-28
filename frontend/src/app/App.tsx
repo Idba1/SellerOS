@@ -15,7 +15,7 @@ import { Forecast } from '../forecast/Forecast'
 import { Simulator } from '../simulator/Simulator'
 import { Orders } from '../orders/Orders'
 import { Analytics } from '../analytics/Analytics'
-import { AuthenticationPage, PasswordRecoveryUnavailable } from '../auth/AuthPage'
+import { AuthenticationPage, PasswordRecoveryPage, PasswordResetPage } from '../auth/AuthPage'
 import { StoreProfilePage, StoreSetupPage } from '../stores/StorePages'
 
 export function App() {
@@ -23,8 +23,8 @@ export function App() {
   const title = route?.title ?? 'Page not found'
   useEffect(() => { document.title = `${title} | SellerOS` }, [title])
   if (route?.path === '/login') return <AuthenticationPage />
-  if (route?.path === '/forgot-password') return <PasswordRecoveryUnavailable />
-  if (route?.path === '/reset-password') return <PasswordRecoveryUnavailable reset />
+  if (route?.path === '/forgot-password') return <PasswordRecoveryPage />
+  if (route?.path === '/reset-password') return <PasswordResetPage />
   if (route?.path === '/store/setup') return <StoreSetupPage />
   if (route?.path === '/') return <AppLayout title={title} path={route.path}><Dashboard /></AppLayout>
   if (route?.path === '/analytics') return <AppLayout title={title} path={route.path}><Analytics /></AppLayout>

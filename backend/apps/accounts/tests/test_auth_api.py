@@ -1,3 +1,8 @@
+from urllib.parse import parse_qs, urlparse
+
+from django.core import mail
+from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
@@ -10,6 +15,10 @@ class AuthenticationApiTests(APITestCase):
         "email": "owner@example.test",
         "password": "synthetic registration passphrase 123!",
     }
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
 
     def create_account(self, email="owner@example.test"):
         return Account.objects.create_user(
@@ -102,3 +111,69 @@ class AuthenticationApiTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data["error"]["code"], "validation_error")
         self.assertIn("password", response.data["error"]["details"])
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_sends_one_time_link_and_revokes_existing_token(self):
+        account = self.create_account()
+        old_token = Token.objects.create(user=account)
+
+        request_response = self.client.post(
+            reverse("auth-password-reset"), {"email": account.email}, format="json"
+        )
+
+        self.assertEqual(request_response.status_code, 202)
+        self.assertEqual(len(mail.outbox), 1)
+        reset_url = next(
+            line.removeprefix("Set a new password: ")
+            for line in mail.outbox[0].body.splitlines()
+            if line.startswith("Set a new password: ")
+        )
+        parsed = urlparse(reset_url)
+        payload = {key: values[0] for key, values in parse_qs(parsed.query).items()}
+        payload["password"] = "new synthetic passphrase 456!"
+
+        confirm_response = self.client.post(
+            reverse("auth-password-reset-confirm"), payload, format="json"
+        )
+
+        self.assertEqual(confirm_response.status_code, 200)
+        account.refresh_from_db()
+        self.assertTrue(account.check_password(payload["password"]))
+        self.assertFalse(Token.objects.filter(key=old_token.key).exists())
+        self.assertEqual(
+            self.client.post(reverse("auth-login"), {"email": account.email, "password": payload["password"]}, format="json").status_code,
+            200,
+        )
+        replay_response = self.client.post(
+            reverse("auth-password-reset-confirm"), payload, format="json"
+        )
+        self.assertEqual(replay_response.status_code, 400)
+        self.assertEqual(replay_response.data["error"]["code"], "validation_error")
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_password_reset_does_not_disclose_unknown_or_inactive_account(self):
+        inactive = self.create_account("inactive@example.test")
+        inactive.is_active = False
+        inactive.save(update_fields=["is_active", "updated_at"])
+
+        for email in ("unknown@example.test", inactive.email):
+            with self.subTest(email=email):
+                response = self.client.post(
+                    reverse("auth-password-reset"), {"email": email}, format="json"
+                )
+                self.assertEqual(response.status_code, 202)
+                self.assertEqual(
+                    response.data["detail"],
+                    "If an active account matches this email, a reset link has been sent.",
+                )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_rejects_invalid_link(self):
+        self.create_account()
+        invalid_link = self.client.post(
+            reverse("auth-password-reset-confirm"),
+            {"uid": "not-a-valid-uid", "token": "invalid", "password": "new synthetic passphrase 456!"},
+            format="json",
+        )
+        self.assertEqual(invalid_link.status_code, 400)
+        self.assertIn("invalid or has expired", invalid_link.data["error"]["details"]["non_field_errors"][0])

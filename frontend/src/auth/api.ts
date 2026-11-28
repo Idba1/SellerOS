@@ -38,6 +38,33 @@ export function register(email: string, password: string): Promise<AuthSession> 
   return authenticate('auth/register/', email, password)
 }
 
+function decodeDetail(value: unknown): string {
+  if (!value || typeof value !== 'object' || !('detail' in value) || typeof value.detail !== 'string') {
+    throw new Error('Invalid password recovery response.')
+  }
+  return value.detail
+}
+
+export async function requestPasswordReset(email: string): Promise<string> {
+  const response = await getApiClient().request('auth/password-reset/', {
+    method: 'POST',
+    body: { email },
+    decode: decodeDetail,
+  })
+  if (!response) throw new Error('Password recovery response was empty.')
+  return response
+}
+
+export async function confirmPasswordReset(uid: string, token: string, password: string): Promise<string> {
+  const response = await getApiClient().request('auth/password-reset/confirm/', {
+    method: 'POST',
+    body: { uid, token, password },
+    decode: decodeDetail,
+  })
+  if (!response) throw new Error('Password reset response was empty.')
+  return response
+}
+
 function firstMessage(details: ErrorDetails): string | null {
   if (typeof details === 'string') return details
   if (Array.isArray(details)) return details.map(firstMessage).find((message): message is string => Boolean(message)) ?? null
